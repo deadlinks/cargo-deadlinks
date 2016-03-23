@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use html5ever::parse_document;
-use html5ever::rcdom::{Element, RcDom, Handle};
+use html5ever::rcdom::{Element, RcDom, Node};
 use tendril::TendrilSink;
 use url::{UrlParser, Url};
 
@@ -15,14 +15,12 @@ pub fn parse_html_file(path: &Path) -> Vec<Url> {
 
     let base_url = Url::from_file_path(path).unwrap();
     let mut urls = Vec::new();
-    parse_a_hrefs(dom.document, &base_url, &mut urls);
+    parse_a_hrefs(&dom.document.borrow(), &base_url, &mut urls);
     urls
 }
 
 /// Traverse the DOM of a parsed HTML element, extracting all URLs from <a href="xxx"> links.
-fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut Vec<Url>) {
-    let node = handle.borrow();
-
+fn parse_a_hrefs(node: &Node, base_url: &Url, urls: &mut Vec<Url>) {
     let mut parser = UrlParser::new();
     parser.base_url(&base_url);
 
@@ -43,6 +41,6 @@ fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut Vec<Url>) {
     }
 
     for child in &node.children {
-        parse_a_hrefs(child.clone(), base_url, urls);
+        parse_a_hrefs(&child.borrow(), base_url, urls);
     }
 }
