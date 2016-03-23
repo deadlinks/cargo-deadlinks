@@ -31,15 +31,15 @@ fn check_file_url(url: &Url) {
     let path = url.to_file_path().unwrap();
     match path.exists() {
         false => {
-            error!("Linked file at path {:?} does not exist!", path);
+            error!("Linked file at path {} does not exist!", path.display());
         }
         true => {
-            debug!("Linked file at path {:?} does exist.", path);
+            debug!("Linked file at path {} does exist.", path.display());
         }
     }
 }
 
 /// Check a URL with "http" or "https" scheme for availablility.
 fn check_http_url(url: &Url) {
-    debug!("Can't check http/https URLs yet. ({:?})", url.serialize());
+    debug!("Can't check http/https URLs yet. ({})", url);
 }

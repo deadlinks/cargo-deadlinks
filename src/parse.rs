@@ -7,35 +7,34 @@ use url::{UrlParser, Url};
 
 /// Parse the html file at the provided path and check the availablility of all links in it.
 pub fn parse_html_file(path: &Path) -> Vec<Url> {
-    info!("Checking doc page at {}", path.to_str().unwrap());
+    info!("Checking doc page at {}", path.display());
     let dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
         .from_file(path)
         .unwrap();
 
     let base_url = Url::from_file_path(path).unwrap();
-    parse_a_hrefs(dom.document, &base_url)
+    let mut urls = Vec::new();
+    parse_a_hrefs(dom.document, &base_url, &mut urls);
+    urls
 }
 
 /// Traverse the DOM of a parsed HTML element, extracting all URLs from <a href="xxx"> links.
-fn parse_a_hrefs(handle: Handle, base_url: &Url) -> Vec<Url> {
+fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut Vec<Url>) {
     let node = handle.borrow();
 
     let mut parser = UrlParser::new();
     parser.base_url(&base_url);
 
-    let mut urls = Vec::new();
     match node.node {
         Element(ref name, _, ref attrs) => {
-            if name.local.to_string() == "a" {
-                for attr in attrs {
-                    if attr.name.local.to_string() == "href" {
-                        let href_val = attr.value.to_string();
+            if &*name.local == "a" {
+                if let Some(attr) = attrs.iter().find(|attr| &*attr.name.local == "href") {
+                    let href_val = &*attr.value;
 
-                        match parser.parse(&href_val) {
-                            Ok(parsed) => urls.push(parsed),
-                            _ => (),
-                        }
+                    match parser.parse(href_val) {
+                        Ok(parsed) => urls.push(parsed),
+                        _ => (),
                     }
                 }
             }
@@ -43,9 +42,7 @@ fn parse_a_hrefs(handle: Handle, base_url: &Url) -> Vec<Url> {
         _ => {},
     }
 
-    let child_urls = node.children.iter().flat_map(|child| {
-        parse_a_hrefs(child.clone(), base_url)
-    }).collect::<Vec<_>>();
-    urls.extend_from_slice(&child_urls);
-    urls
+    for child in &node.children {
+        parse_a_hrefs(child.clone(), base_url, urls);
+    }
 }

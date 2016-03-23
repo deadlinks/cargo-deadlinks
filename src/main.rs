@@ -114,7 +114,7 @@ fn walk_dir(dir_path: &Path) {
                         if entry.file_type().unwrap().is_file() {
                             let entry_path = entry.path();
                             let extension = entry_path.extension();
-                            if extension.is_some() && extension.unwrap() == "html" {
+                            if extension == Some("html".as_ref()) {
                                 let urls = parse_html_file(&entry.path());
                                 check_urls(&urls);
                             }
@@ -130,7 +130,7 @@ fn walk_dir(dir_path: &Path) {
         }
         Err(err) => {
             debug!("{:?}", err);
-            error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.to_str().unwrap());
+            error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.display());
         }
     }
 }
