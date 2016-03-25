@@ -16,6 +16,7 @@ cargo install cargo-deadlinks
 
 From your packages directory run:
 ```bash
+# any broken links will show up in the output
 cargo deadlinks
 ```
 By default this will check only the offline (`file://`) links of your package.
