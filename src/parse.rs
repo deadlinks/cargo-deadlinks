@@ -25,22 +25,18 @@ fn parse_a_hrefs(handle: Handle, base_url: &Url) -> Vec<Url> {
     parser.base_url(&base_url);
 
     let mut urls = Vec::new();
-    match node.node {
-        Element(ref name, _, ref attrs) => {
-            if name.local.to_string() == "a" {
-                for attr in attrs {
-                    if attr.name.local.to_string() == "href" {
-                        let href_val = attr.value.to_string();
+    if let Element(ref name, _, ref attrs) = node.node {
+        if name.local.to_string() == "a" {
+            for attr in attrs {
+                if attr.name.local.to_string() == "href" {
+                    let href_val = attr.value.to_string();
 
-                        match parser.parse(&href_val) {
-                            Ok(parsed) => urls.push(parsed),
-                            _ => (),
-                        }
+                    if let Ok(parsed) = parser.parse(&href_val) {
+                        urls.push(parsed)
                     }
                 }
             }
         }
-        _ => {},
     }
 
     let child_urls = node.children.iter().flat_map(|child| {
