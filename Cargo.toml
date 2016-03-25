@@ -1,5 +1,6 @@
 [package]
 name            = "cargo-deadlinks"
+description     = "Cargo subcommand for checking your documentation for broken links"
 version         = "0.1.0"
 authors         = ["Maximilian Goisser <goisser94@gmail.com>"]
 
