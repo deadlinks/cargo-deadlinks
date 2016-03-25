@@ -1,4 +1,4 @@
-# cargo-deadlinks
+# cargo-deadlinks • [![Crates.io](http://meritbadge.herokuapp.com/cargo-deadlinks)](https://crates.io/crates/cargo-deadlinks) ![License](https://img.shields.io/crates/l/cargo-deadlinks.svg)
 
 Check your `cargo doc` documentation for broken links!
 
