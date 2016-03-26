@@ -16,7 +16,7 @@ extern crate cargo_edit;
 mod check;
 mod parse;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use log::LogLevelFilter;
 use env_logger::LogBuilder;
@@ -42,7 +42,7 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct MainArgs {
-    arg_directory: Option<String>,
+    arg_directory: Option<PathBuf>,
     flag_verbose: bool,
     flag_debug: bool,
 }
@@ -54,9 +54,9 @@ fn main() {
 
     init_logger(&args);
 
-    let dir = determine_dir(args.arg_directory);
-    let dir_path = Path::new(&dir);
-    walk_dir(dir_path);
+    let dir = args.arg_directory.unwrap_or_else(determine_dir);
+    let dir = dir.canonicalize().unwrap();
+    walk_dir(&dir);
 }
 
 /// Initalizes the logger according to the provided config flags.
@@ -78,25 +78,17 @@ fn init_logger(args: &MainArgs) {
 /// from the package name found there.
 ///
 /// All *.html files under the root directory will be checked.
-fn determine_dir(arg_dir: Option<String>) -> String {
-    let pwd_out = String::from_utf8(::std::process::Command::new("pwd").output().unwrap().stdout).unwrap();
-    let pwd = &pwd_out[0..pwd_out.len() - 1];
-    if arg_dir.is_some() {
-        return Path::new(pwd).join(arg_dir.unwrap()).to_str().unwrap().to_owned();
-    }
-
-    match Manifest::open(&Some(pwd)) {
+fn determine_dir() -> PathBuf {
+    match Manifest::open(&None) {
         Ok(manifest) => {
-            let mut package_name = manifest.data.get("package").unwrap().as_table().unwrap()
-                                                .get("name").unwrap().as_str().unwrap()
-                                                .to_owned();
-            package_name = package_name.replace("-", "_");
+            let package_name = manifest.data.get("package").unwrap().as_table().unwrap()
+                                            .get("name").unwrap().as_str().unwrap();
+            let package_name = package_name.replace("-", "_");
 
-            let default_path = Path::new(pwd).join("target").join("doc").join(package_name);
-            default_path.to_str().unwrap().to_string()
+            Path::new("target").join("doc").join(package_name)
         },
         Err(err) => {
-            debug!("Error: {:?}", err);
+            debug!("Error: {}", err);
             error!("Could not find a Cargo.toml.");
             ::std::process::exit(1);
         }
@@ -114,7 +106,7 @@ fn walk_dir(dir_path: &Path) {
                         if entry.file_type().unwrap().is_file() {
                             let entry_path = entry.path();
                             let extension = entry_path.extension();
-                            if extension.is_some() && extension.unwrap() == "html" {
+                            if extension == Some("html".as_ref()) {
                                 let urls = parse_html_file(&entry.path());
                                 check_urls(&urls);
                             }
@@ -130,7 +122,7 @@ fn walk_dir(dir_path: &Path) {
         }
         Err(err) => {
             debug!("{:?}", err);
-            error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.to_str().unwrap());
+            error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.display());
         }
     }
 }
