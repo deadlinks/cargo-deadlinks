@@ -1,0 +1,34 @@
+sudo: false
+language: rust
+rust:
+- nightly
+- beta
+- stable
+matrix:
+  allow_failures:
+    - rust: nightly
+      env: FEATURES=lint
+  exclude:
+    - rust: beta
+      env: FEATURES=lint
+    - rust: stable
+      env: FEATURES=lint
+branches:
+  only:
+    - master
+before_script:
+- |
+  pip install 'travis-cargo<0.2' --user &&
+  export PATH=$HOME/.local/bin:$PATH
+script:
+- |
+  travis-cargo build -- --no-default-features --features $FEATURES &&
+  travis-cargo test -- --no-default-features --features $FEATURES &&
+  travis-cargo bench -- --no-default-features --features $FEATURES
+notifications:
+  email:
+    on_success: never
+env:
+  matrix:
+    - FEATURES=travis
+    - FEATURES=lint
