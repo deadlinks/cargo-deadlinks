@@ -24,20 +24,16 @@ fn parse_a_hrefs(node: &Node, base_url: &Url, urls: &mut Vec<Url>) {
     let mut parser = UrlParser::new();
     parser.base_url(&base_url);
 
-    match node.node {
-        Element(ref name, _, ref attrs) => {
-            if &*name.local == "a" {
-                if let Some(attr) = attrs.iter().find(|attr| &*attr.name.local == "href") {
-                    let href_val = &*attr.value;
+    if let Element(ref name, _, ref attrs) = node.node {
+        if &*name.local == "a" {
+            if let Some(attr) = attrs.iter().find(|attr| &*attr.name.local == "href") {
+                let href_val = &*attr.value;
 
-                    match parser.parse(href_val) {
-                        Ok(parsed) => urls.push(parsed),
-                        _ => (),
-                    }
+                if let Ok(parsed) = parser.parse(&href_val) {
+                    urls.push(parsed)
                 }
             }
         }
-        _ => {},
     }
 
     for child in &node.children {

@@ -29,13 +29,11 @@ fn check_url(url: &Url) {
 /// Check a URL with the "file" scheme for availablility.
 fn check_file_url(url: &Url) {
     let path = url.to_file_path().unwrap();
-    match path.exists() {
-        false => {
-            error!("Linked file at path {} does not exist!", path.display());
-        }
-        true => {
-            debug!("Linked file at path {} does exist.", path.display());
-        }
+    
+    if path.exists() {
+        error!("Linked file at path {} does not exist!", path.display());
+    } else {
+        debug!("Linked file at path {} does exist.", path.display());
     }
 }
 
