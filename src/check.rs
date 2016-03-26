@@ -31,9 +31,9 @@ fn check_file_url(url: &Url) {
     let path = url.to_file_path().unwrap();
     
     if path.exists() {
-        error!("Linked file at path {} does not exist!", path.display());
-    } else {
         debug!("Linked file at path {} does exist.", path.display());
+    } else {
+        error!("Linked file at path {} does not exist!", path.display());
     }
 }
 
