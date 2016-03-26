@@ -42,7 +42,7 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct MainArgs {
-    arg_directory: Option<PathBuf>,
+    arg_directory: Option<String>,
     flag_verbose: bool,
     flag_debug: bool,
 }
@@ -54,7 +54,7 @@ fn main() {
 
     init_logger(&args);
 
-    let dir = args.arg_directory.unwrap_or_else(determine_dir);
+    let dir = args.arg_directory.map_or_else(determine_dir, |dir| PathBuf::from(dir));
     let dir = dir.canonicalize().unwrap();
     walk_dir(&dir);
 }
