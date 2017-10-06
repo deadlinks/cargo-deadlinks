@@ -28,6 +28,7 @@ clippy = { version = "0.0.55", optional = true }
 
 [features]
 default = []
+unstable = [] # for travis-cargo
 
 travis = []
 lint = ["clippy"]
