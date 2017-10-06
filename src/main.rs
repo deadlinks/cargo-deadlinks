@@ -17,6 +17,7 @@ mod check;
 mod parse;
 
 use std::path::{Path, PathBuf};
+use std::process;
 
 use log::LogLevelFilter;
 use env_logger::LogBuilder;
@@ -56,7 +57,9 @@ fn main() {
 
     let dir = args.arg_directory.map_or_else(determine_dir, |dir| PathBuf::from(dir));
     let dir = dir.canonicalize().unwrap();
-    walk_dir(&dir);
+    if !walk_dir(&dir) {
+        process::exit(1);
+    }
 }
 
 /// Initalizes the logger according to the provided config flags.
@@ -97,7 +100,9 @@ fn determine_dir() -> PathBuf {
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
-fn walk_dir(dir_path: &Path) {
+fn walk_dir(dir_path: &Path) -> bool {
+    let mut result = true;
+
     match dir_path.read_dir() {
         Ok(read_dir) => {
             for dir_entry in read_dir {
@@ -108,7 +113,7 @@ fn walk_dir(dir_path: &Path) {
                             let extension = entry_path.extension();
                             if extension == Some("html".as_ref()) {
                                 let urls = parse_html_file(&entry.path());
-                                check_urls(&urls);
+                                result &= check_urls(&urls);
                             }
                         } else {
                             walk_dir(&entry.path());
@@ -125,4 +130,6 @@ fn walk_dir(dir_path: &Path) {
             error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.display());
         }
     }
+
+    result
 }
