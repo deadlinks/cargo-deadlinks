@@ -8,6 +8,8 @@ matrix:
   allow_failures:
     - rust: nightly
       env: FEATURES=lint
+    - rust: nightly
+      env: FEATURES=travis
   exclude:
     - rust: beta
       env: FEATURES=lint
