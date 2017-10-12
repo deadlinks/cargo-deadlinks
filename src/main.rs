@@ -116,7 +116,7 @@ fn walk_dir(dir_path: &Path) -> bool {
                                 result &= check_urls(&urls);
                             }
                         } else {
-                            walk_dir(&entry.path());
+                            result &= walk_dir(&entry.path());
                         }
                     },
                     Err(err) => {
