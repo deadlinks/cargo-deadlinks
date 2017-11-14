@@ -7,7 +7,6 @@ extern crate docopt;
 extern crate html5ever;
 extern crate url;
 
-#[macro_use]
 extern crate string_cache;
 extern crate tendril;
 
@@ -32,13 +31,14 @@ const MAIN_USAGE: &'static str = "
 Check your package's documentation for dead links.
 
 Usage:
-    cargo deadlinks [--dir <directory>] [options]
+    cargo-deadlinks [--dir <directory>] [options]
 
 Options:
     -h --help               Print this message
     --dir                   Specify a directory to check (default is target/doc/<package>)
     --debug                 Use debug output
-    -v, --verbose           Use verbose output
+    -v --verbose            Use verbose output
+    -V --version            Print version info and exit.
 ";
 
 #[derive(Debug, RustcDecodable)]
@@ -50,8 +50,9 @@ struct MainArgs {
 
 fn main() {
     let args: MainArgs = Docopt::new(MAIN_USAGE)
-                            .and_then(|d| d.decode())
-                            .unwrap_or_else(|e| e.exit());
+                            .and_then(|d| {
+                                d.version(Some(env!("CARGO_PKG_VERSION").to_owned())).decode()
+                            }).unwrap_or_else(|e| e.exit());
 
     init_logger(&args);
 
