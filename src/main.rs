@@ -31,7 +31,7 @@ const MAIN_USAGE: &'static str = "
 Check your package's documentation for dead links.
 
 Usage:
-    cargo-deadlinks [--dir <directory>] [options]
+    cargo deadlinks [--dir <directory>] [options]
 
 Options:
     -h --help               Print this message
