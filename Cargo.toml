@@ -1,34 +1,34 @@
 [package]
-name            = "cargo-deadlinks"
-description     = "Cargo subcommand for checking your documentation for broken links"
-version         = "0.3.0"
-authors         = ["Maximilian Goisser <goisser94@gmail.com>"]
+name = "cargo-deadlinks"
+description = "Cargo subcommand for checking your documentation for broken links"
+version = "0.4.0"
+authors = ["Maximilian Goisser <goisser94@gmail.com>"]
 
-repository      = "https://github.com/deadlinks/cargo-deadlinks"
-homepage        = "https://github.com/deadlinks/cargo-deadlinks"
-readme          = "README.md"
+repository = "https://github.com/deadlinks/cargo-deadlinks"
+homepage = "https://github.com/deadlinks/cargo-deadlinks"
+readme = "README.md"
 
-license         = "MIT OR Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
-html5ever = "0.5.3"
-tendril = "0.2.2"
-string_cache = "0.2.11"
+html5ever = "0.22"
+url = "1.6"
+cargo-edit = "0.2"
+docopt = "0.8"
+serde = "1.0"
+serde_derive = "1.0"
+log = "0.3"
+env_logger = "0.3"
+reqwest = "0.8"
+walkdir = "2.1"
+rayon = "1.0"
+num_cpus = "1.8"
 
-url = "0.5.5"
-
-cargo-edit = "0.1.2"
-
-docopt = "0.6.78"
-log = "0.3.5"
-env_logger = "0.3.2"
-rustc-serialize = "0.3.18"
-
-clippy = { version = "0.0.55", optional = true }
+clippy = { version = "0.0.186", optional = true }
 
 [features]
 default = []
-unstable = [] # for travis-cargo
+unstable = [] # For travis-cargo.
 
 travis = []
 lint = ["clippy"]

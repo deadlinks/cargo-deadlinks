@@ -1,16 +1,19 @@
+extern crate docopt;
+extern crate env_logger;
 #[macro_use]
 extern crate log;
-extern crate env_logger;
-extern crate rustc_serialize;
-extern crate docopt;
+
+#[macro_use]
+extern crate serde_derive;
 
 extern crate html5ever;
 extern crate url;
 
-extern crate string_cache;
-extern crate tendril;
-
 extern crate cargo_edit;
+extern crate num_cpus;
+extern crate rayon;
+extern crate reqwest;
+extern crate walkdir;
 
 mod check;
 mod parse;
@@ -23,6 +26,8 @@ use env_logger::LogBuilder;
 use docopt::Docopt;
 
 use cargo_edit::Manifest;
+use rayon::ThreadPoolBuilder;
+use walkdir::{DirEntry, WalkDir};
 
 use check::check_urls;
 use parse::parse_html_file;
@@ -41,7 +46,7 @@ Options:
     -V --version            Print version info and exit.
 ";
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 struct MainArgs {
     arg_directory: Option<String>,
     flag_verbose: bool,
@@ -50,13 +55,16 @@ struct MainArgs {
 
 fn main() {
     let args: MainArgs = Docopt::new(MAIN_USAGE)
-                            .and_then(|d| {
-                                d.version(Some(env!("CARGO_PKG_VERSION").to_owned())).decode()
-                            }).unwrap_or_else(|e| e.exit());
+        .and_then(|d| {
+            d.version(Some(env!("CARGO_PKG_VERSION").to_owned()))
+                .deserialize()
+        })
+        .unwrap_or_else(|e| e.exit());
 
     init_logger(&args);
 
-    let dir = args.arg_directory.map_or_else(determine_dir, |dir| PathBuf::from(dir));
+    let dir = args.arg_directory
+        .map_or_else(determine_dir, |dir| PathBuf::from(dir));
     let dir = dir.canonicalize().unwrap();
     if !walk_dir(&dir) {
         process::exit(1);
@@ -68,9 +76,15 @@ fn init_logger(args: &MainArgs) {
     let mut builder = LogBuilder::new();
     builder.format(|record| format!("{}", record.args()));
     match (args.flag_debug, args.flag_verbose) {
-        (true, _) => { builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Debug); },
-        (false, true) => { builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Info); },
-        (false, false) => { builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Error); },
+        (true, _) => {
+            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Debug);
+        }
+        (false, true) => {
+            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Info);
+        }
+        (false, false) => {
+            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Error);
+        }
     }
     builder.init().unwrap();
 }
@@ -85,50 +99,48 @@ fn init_logger(args: &MainArgs) {
 fn determine_dir() -> PathBuf {
     match Manifest::open(&None) {
         Ok(manifest) => {
-            let package_name = manifest.data.get("package").unwrap().as_table().unwrap()
-                                            .get("name").unwrap().as_str().unwrap();
+            let package_name = manifest
+                .data
+                .get("package")
+                .unwrap()
+                .as_table()
+                .unwrap()
+                .get("name")
+                .unwrap()
+                .as_str()
+                .unwrap();
             let package_name = package_name.replace("-", "_");
 
             Path::new("target").join("doc").join(package_name)
-        },
+        }
         Err(err) => {
             debug!("Error: {}", err);
             error!("Could not find a Cargo.toml.");
             ::std::process::exit(1);
         }
     }
+}
 
+fn is_html_file(entry: &DirEntry) -> bool {
+    match entry.path().extension() {
+        Some(e) => e.to_str().map(|ext| ext == "html").unwrap_or(false),
+        None => false,
+    }
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
 fn walk_dir(dir_path: &Path) -> bool {
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(num_cpus::get())
+        .build()
+        .unwrap();
     let mut result = true;
 
-    match dir_path.read_dir() {
-        Ok(read_dir) => {
-            for dir_entry in read_dir {
-                match dir_entry {
-                    Ok(entry) => {
-                        if entry.file_type().unwrap().is_file() {
-                            let entry_path = entry.path();
-                            let extension = entry_path.extension();
-                            if extension == Some("html".as_ref()) {
-                                let urls = parse_html_file(&entry.path());
-                                result &= check_urls(&urls);
-                            }
-                        } else {
-                            result &= walk_dir(&entry.path());
-                        }
-                    },
-                    Err(err) => {
-                        error!("Error when traversing directory: {}", err);
-                    }
-                }
-            }
-        }
-        Err(err) => {
-            debug!("{:?}", err);
-            error!("Could not read directory {}. Did you run `cargo doc`?", dir_path.display());
+    for entry in WalkDir::new(dir_path).into_iter().filter_map(|e| e.ok()) {
+        if entry.file_type().is_file() && is_html_file(&entry) {
+            let urls = parse_html_file(entry.path());
+            let success = pool.install(|| check_urls(&urls));
+            result &= success;
         }
     }
 
