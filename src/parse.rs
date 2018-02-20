@@ -1,12 +1,13 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use html5ever::parse_document;
-use html5ever::rcdom::{Element, RcDom, Node};
-use tendril::TendrilSink;
-use url::{UrlParser, Url};
+use html5ever::rcdom::{Handle, NodeData, RcDom};
+use html5ever::tendril::TendrilSink;
+use url::Url;
 
 /// Parse the html file at the provided path and check the availablility of all links in it.
-pub fn parse_html_file(path: &Path) -> Vec<Url> {
+pub fn parse_html_file(path: &Path) -> HashSet<Url> {
     info!("Checking doc page at {}", path.display());
     let dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
@@ -14,29 +15,39 @@ pub fn parse_html_file(path: &Path) -> Vec<Url> {
         .unwrap();
 
     let base_url = Url::from_file_path(path).unwrap();
-    let mut urls = Vec::new();
-    parse_a_hrefs(&dom.document.borrow(), &base_url, &mut urls);
+    let mut urls = HashSet::new();
+    parse_a_hrefs(dom.document, &base_url, &mut urls);
     urls
 }
 
 /// Traverse the DOM of a parsed HTML element, extracting all URLs from <a href="xxx"> links.
-fn parse_a_hrefs(node: &Node, base_url: &Url, urls: &mut Vec<Url>) {
-    let mut parser = UrlParser::new();
-    parser.base_url(&base_url);
+fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut HashSet<Url>) {
+    let options = Url::options();
+    options.base_url(Some(&base_url));
 
-    if let Element(ref name, _, ref attrs) = node.node {
-        if &*name.local == "a" {
-            if let Some(attr) = attrs.iter().find(|attr| &*attr.name.local == "href") {
-                let href_val = &*attr.value;
-
-                if let Ok(parsed) = parser.parse(&href_val) {
-                    urls.push(parsed)
+    let node = handle;
+    if let NodeData::Element {
+        ref name,
+        ref attrs,
+        ..
+    } = node.data
+    {
+        if &name.local == "a" {
+            if let Some(attr) = attrs
+                .borrow()
+                .iter()
+                .find(|attr| &attr.name.local == "href")
+            {
+                let val = &attr.value;
+                if let Ok(link) = options.parse(val) {
+                    debug!("link is {:?}", link);
+                    urls.insert(link);
                 }
             }
         }
     }
 
-    for child in &node.children {
-        parse_a_hrefs(&child.borrow(), base_url, urls);
+    for child in node.children.borrow().iter() {
+        parse_a_hrefs(child.clone(), base_url, urls);
     }
 }
