@@ -9,10 +9,11 @@ extern crate serde_derive;
 extern crate html5ever;
 extern crate url;
 
-extern crate cargo_edit;
+extern crate cargo_metadata;
 extern crate num_cpus;
 extern crate rayon;
 extern crate reqwest;
+extern crate serde_json;
 extern crate walkdir;
 
 mod check;
@@ -21,11 +22,11 @@ mod parse;
 use std::path::{Path, PathBuf};
 use std::process;
 
-use log::LogLevelFilter;
-use env_logger::LogBuilder;
+use cargo_metadata::Metadata;
 use docopt::Docopt;
+use env_logger::LogBuilder;
+use log::LogLevelFilter;
 
-use cargo_edit::Manifest;
 use rayon::ThreadPoolBuilder;
 use walkdir::{DirEntry, WalkDir};
 
@@ -63,12 +64,28 @@ fn main() {
 
     init_logger(&args);
 
-    let dir = args.arg_directory
+    let dir = args
+        .arg_directory
         .map_or_else(determine_dir, |dir| PathBuf::from(dir));
     let dir = dir.canonicalize().unwrap();
     if !walk_dir(&dir) {
         process::exit(1);
     }
+}
+
+pub fn metadata_run(additional_args: Option<String>) -> Result<Metadata, ()> {
+    let cargo = std::env::var("CARGO").unwrap_or_else(|_| String::from("cargo"));
+    let mut cmd = std::process::Command::new(cargo);
+    cmd.arg("metadata");
+    cmd.args(&["--format-version", "1"]);
+    if let Some(additional_args) = additional_args {
+        cmd.arg(&additional_args);
+    }
+
+    let output = cmd.output().unwrap();
+    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+    let meta = serde_json::from_str(stdout).unwrap();
+    Ok(meta)
 }
 
 /// Initalizes the logger according to the provided config flags.
@@ -97,24 +114,14 @@ fn init_logger(args: &MainArgs) {
 ///
 /// All *.html files under the root directory will be checked.
 fn determine_dir() -> PathBuf {
-    match Manifest::open(&None) {
+    match metadata_run(None) {
         Ok(manifest) => {
-            let package_name = manifest
-                .data
-                .get("package")
-                .unwrap()
-                .as_table()
-                .unwrap()
-                .get("name")
-                .unwrap()
-                .as_str()
-                .unwrap();
+            let package_name = manifest.workspace_members[0].name();
             let package_name = package_name.replace("-", "_");
 
             Path::new("target").join("doc").join(package_name)
         }
-        Err(err) => {
-            debug!("Error: {}", err);
+        Err(_) => {
             error!("Could not find a Cargo.toml.");
             ::std::process::exit(1);
         }
