@@ -6,6 +6,8 @@ use url::Url;
 
 use super::CheckContext;
 
+const PREFIX_BLACKLIST: [&'static str; 1] = ["https://doc.rust-lang.org"];
+
 /// Checks multiple URLs for availability. Returns `false` if at least one ULR is unavailable.
 pub fn check_urls(urls: &HashSet<Url>, ctx: &CheckContext) -> bool {
     let mut result = true;
@@ -55,6 +57,17 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> bool {
         );
         return true;
     }
+
+    for blacklisted_prefix in PREFIX_BLACKLIST.iter() {
+        if url.as_str().starts_with(blacklisted_prefix) {
+            debug!(
+                "Skip checking {} as URL prefix is on the builtin blacklist",
+                url
+            );
+            return true;
+        }
+    }
+
     let resp = reqwest::get(url.as_str());
     match resp {
         Ok(r) => r.status() == StatusCode::Ok,
