@@ -15,6 +15,7 @@ matrix:
       env: FEATURES=lint
     - rust: stable
       env: FEATURES=lint
+  fast_finish: true
 branches:
   only:
     - master
