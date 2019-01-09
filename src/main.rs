@@ -42,6 +42,7 @@ Usage:
 Options:
     -h --help               Print this message
     --dir                   Specify a directory to check (default is target/doc/<package>)
+    --skip-http             Skip checking of 'http' and 'https' scheme links
     --debug                 Use debug output
     -v --verbose            Use verbose output
     -V --version            Print version info and exit.
@@ -52,6 +53,20 @@ struct MainArgs {
     arg_directory: Option<String>,
     flag_verbose: bool,
     flag_debug: bool,
+    flag_skip_http: bool,
+}
+
+#[derive(Debug)]
+pub struct CheckContext {
+    check_http: bool,
+}
+
+impl Into<CheckContext> for MainArgs {
+    fn into(self) -> CheckContext {
+        CheckContext {
+            check_http: !self.flag_skip_http,
+        }
+    }
 }
 
 fn main() {
@@ -66,9 +81,11 @@ fn main() {
 
     let dir = args
         .arg_directory
+        .clone()
         .map_or_else(determine_dir, |dir| PathBuf::from(dir));
     let dir = dir.canonicalize().unwrap();
-    if !walk_dir(&dir) {
+    let ctx: CheckContext = args.into();
+    if !walk_dir(&dir, &ctx) {
         process::exit(1);
     }
 }
@@ -136,7 +153,7 @@ fn is_html_file(entry: &DirEntry) -> bool {
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
-fn walk_dir(dir_path: &Path) -> bool {
+fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
@@ -146,7 +163,7 @@ fn walk_dir(dir_path: &Path) -> bool {
     for entry in WalkDir::new(dir_path).into_iter().filter_map(|e| e.ok()) {
         if entry.file_type().is_file() && is_html_file(&entry) {
             let urls = parse_html_file(entry.path());
-            let success = pool.install(|| check_urls(&urls));
+            let success = pool.install(|| check_urls(&urls, &ctx));
             result &= success;
         }
     }

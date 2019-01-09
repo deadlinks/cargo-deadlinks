@@ -1,25 +1,27 @@
 //! Provides functionality for checking the availablility of URLs.
 
-use std::collections::HashSet;
 use reqwest::{self, StatusCode};
+use std::collections::HashSet;
 use url::Url;
 
+use super::CheckContext;
+
 /// Checks multiple URLs for availability. Returns `false` if at least one ULR is unavailable.
-pub fn check_urls(urls: &HashSet<Url>) -> bool {
+pub fn check_urls(urls: &HashSet<Url>, ctx: &CheckContext) -> bool {
     let mut result = true;
 
     for url in urls {
-        result &= check_url(url);
+        result &= check_url(url, ctx);
     }
 
     result
 }
 
 /// Check a single URL for availability. Returns `false` if it is unavailable.
-fn check_url(url: &Url) -> bool {
+fn check_url(url: &Url, ctx: &CheckContext) -> bool {
     match url.scheme() {
-        "file" => check_file_url(url),
-        "http" | "https" => check_http_url(url),
+        "file" => check_file_url(url, ctx),
+        "http" | "https" => check_http_url(url, ctx),
         scheme @ "javascript" => {
             debug!("Not checking URL scheme {:?}", scheme);
             true
@@ -32,7 +34,7 @@ fn check_url(url: &Url) -> bool {
 }
 
 /// Check a URL with the "file" scheme for availability. Returns `false` if it is unavailable.
-fn check_file_url(url: &Url) -> bool {
+fn check_file_url(url: &Url, _ctx: &CheckContext) -> bool {
     let path = url.to_file_path().unwrap();
 
     if path.exists() {
@@ -45,7 +47,14 @@ fn check_file_url(url: &Url) -> bool {
 }
 
 /// Check a URL with "http" or "https" scheme for availability. Returns `false` if it is unavailable.
-fn check_http_url(url: &Url) -> bool {
+fn check_http_url(url: &Url, ctx: &CheckContext) -> bool {
+    if !ctx.check_http {
+        debug!(
+            "Skip checking {} as checking of http URLs is turned off",
+            url
+        );
+        return true;
+    }
     let resp = reqwest::get(url.as_str());
     match resp {
         Ok(r) => r.status() == StatusCode::Ok,
