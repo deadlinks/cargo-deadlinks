@@ -83,7 +83,15 @@ fn main() {
         .arg_directory
         .clone()
         .map_or_else(determine_dir, |dir| PathBuf::from(dir));
-    let dir = dir.canonicalize().unwrap();
+    let dir = match dir.canonicalize() {
+        Ok(dir) => dir,
+        Err(_) => {
+            println!("Could not find directory {:?}.", dir);
+            println!("");
+            println!("Please run `cargo doc` before running `cargo deadlinks`.");
+            process::exit(1);
+        }
+    };
     let ctx: CheckContext = args.into();
     if !walk_dir(&dir, &ctx) {
         process::exit(1);
