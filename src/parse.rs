@@ -22,9 +22,6 @@ pub fn parse_html_file(path: &Path) -> HashSet<Url> {
 
 /// Traverse the DOM of a parsed HTML element, extracting all URLs from <a href="xxx"> links.
 fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut HashSet<Url>) {
-    let options = Url::options();
-    options.base_url(Some(&base_url));
-
     let node = handle;
     if let NodeData::Element {
         ref name,
@@ -39,9 +36,11 @@ fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut HashSet<Url>) {
                 .find(|attr| &attr.name.local == "href")
             {
                 let val = &attr.value;
-                if let Ok(link) = options.parse(val) {
+                if let Ok(link) = base_url.join(val) {
                     debug!("link is {:?}", link);
                     urls.insert(link);
+                } else {
+                    debug!("unparsable link {:?}", val);
                 }
             }
         }
