@@ -3,12 +3,12 @@ extern crate assert_cmd;
 use assert_cmd::prelude::*;
 use std::process::Command;
 
-mod non_existent_http_link {
+mod working_http_check {
     use super::*;
 
     #[test]
-    fn fails_for_broken_http_link() {
-        match std::fs::remove_dir_all("./tests/non_existent_http_link/target") {
+    fn works() {
+        match std::fs::remove_dir_all("./tests/working_http_check/target") {
             Ok(_) => {}
             Err(err) => match err.kind() {
                 std::io::ErrorKind::NotFound => {}
@@ -22,24 +22,16 @@ mod non_existent_http_link {
         // generate docs
         Command::new("cargo")
             .arg("doc")
-            .current_dir("./tests/non_existent_http_link")
+            .current_dir("./tests/working_http_check")
             .assert()
             .success();
 
-        // succeeds without --check-http flag
-        Command::cargo_bin("cargo-deadlinks")
-            .unwrap()
-            .arg("deadlinks")
-            .current_dir("./tests/non_existent_http_link")
-            .assert()
-            .success();
-
-        // fails with --check-http flag
+        // succeeds with --check-http flag
         Command::cargo_bin("cargo-deadlinks")
             .unwrap()
             .args(&["deadlinks", "--check-http"])
-            .current_dir("./tests/non_existent_http_link")
+            .current_dir("./tests/working_http_check")
             .assert()
-            .failure();
+            .success();
     }
 }

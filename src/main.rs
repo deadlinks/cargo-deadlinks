@@ -42,7 +42,7 @@ Usage:
 Options:
     -h --help               Print this message
     --dir                   Specify a directory to check (default is target/doc/<package>)
-    --skip-http             Skip checking of 'http' and 'https' scheme links
+    --check-http            Check 'http' and 'https' scheme links
     --debug                 Use debug output
     -v --verbose            Use verbose output
     -V --version            Print version info and exit.
@@ -53,7 +53,7 @@ struct MainArgs {
     arg_directory: Option<String>,
     flag_verbose: bool,
     flag_debug: bool,
-    flag_skip_http: bool,
+    flag_check_http: bool,
 }
 
 #[derive(Debug)]
@@ -64,7 +64,7 @@ pub struct CheckContext {
 impl Into<CheckContext> for MainArgs {
     fn into(self) -> CheckContext {
         CheckContext {
-            check_http: !self.flag_skip_http,
+            check_http: self.flag_check_http,
         }
     }
 }
