@@ -18,8 +18,10 @@ From your packages directory run:
 ```bash
 # any broken links will show up in the output
 cargo deadlinks
+# if you also want to check http and https links
+cargo deadlinks --check-http
 ```
-By default this will check only the offline (`file://`) links of your package.
+By default `cargo deadlinks` will check only the offline (`file://`) links of your package.
 
 If you want to check the documentation in another directory e.g. to check all
 your dependencies, you can provide the `--dir` argument:
