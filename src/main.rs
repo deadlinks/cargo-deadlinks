@@ -168,7 +168,7 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
         .unwrap();
 
     pool.install(|| {
-        unavailable_urls(dir_path, ctx).par_bridge().any(|err| {
+        unavailable_urls(dir_path, ctx).any(|err| {
             match err {
                 CheckError::File(path) => {
                     error!("Linked file at path {} does not exist!", path.display());
@@ -188,9 +188,10 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
 fn unavailable_urls<'a>(
     dir_path: &'a Path,
     ctx: &'a CheckContext,
-) -> impl Iterator<Item = CheckError> + 'a {
+) -> impl ParallelIterator<Item = CheckError> + 'a {
     WalkDir::new(dir_path)
         .into_iter()
+        .par_bridge()
         .filter_map(|e| e.ok())
         .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
         .flat_map(|entry| parse_html_file(entry.path()))
