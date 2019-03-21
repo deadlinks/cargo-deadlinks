@@ -27,7 +27,7 @@ use log::LogLevelFilter;
 
 use rayon::{prelude::*, ThreadPoolBuilder};
 
-use cargo_deadlinks::{unavailable_urls, CheckContext, CheckError, HttpError};
+use cargo_deadlinks::{unavailable_urls, CheckContext};
 
 const MAIN_USAGE: &'static str = "
 Check your package's documentation for dead links.
@@ -153,17 +153,7 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
 
     pool.install(|| {
         unavailable_urls(dir_path, ctx).any(|err| {
-            match err {
-                CheckError::File(path) => {
-                    error!("Linked file at path {} does not exist!", path.display());
-                }
-                CheckError::Http(HttpError::UnexpectedStatus(url, status)) => {
-                    error!("Unexpected HTTP status fetching {}: {}", url, status);
-                }
-                CheckError::Http(HttpError::Fetch(url, e)) => {
-                    error!("Error fetching {}: {}", url, e);
-                }
-            }
+            error!("{}", err);
             true
         })
     })

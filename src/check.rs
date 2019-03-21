@@ -1,5 +1,5 @@
 //! Provides functionality for checking the availablility of URLs.
-use std::path::PathBuf;
+use std::{fmt, path::PathBuf};
 
 use reqwest::{self, StatusCode};
 use url::Url;
@@ -14,10 +14,32 @@ pub enum HttpError {
     Fetch(Url, reqwest::Error),
 }
 
+impl fmt::Display for HttpError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            HttpError::UnexpectedStatus(url, status) => {
+                write!(f, "Unexpected HTTP status fetching {}: {}", url, status)
+            }
+            HttpError::Fetch(url, e) => write!(f, "Error fetching {}: {}", url, e),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum CheckError {
     File(PathBuf),
     Http(HttpError),
+}
+
+impl fmt::Display for CheckError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CheckError::File(path) => {
+                write!(f, "Linked file at path {} does not exist!", path.display())
+            }
+            CheckError::Http(err) => err.fmt(f),
+        }
+    }
 }
 
 /// Check a single URL for availability. Returns `false` if it is unavailable.
