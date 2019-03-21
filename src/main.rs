@@ -26,11 +26,12 @@ use cargo_metadata::Metadata;
 use docopt::Docopt;
 use env_logger::LogBuilder;
 use log::LogLevelFilter;
+use url::Url;
 
-use rayon::ThreadPoolBuilder;
+use rayon::{prelude::*, ThreadPoolBuilder};
 use walkdir::{DirEntry, WalkDir};
 
-use check::check_urls;
+use check::is_available;
 use parse::parse_html_file;
 
 const MAIN_USAGE: &'static str = "
@@ -166,15 +167,18 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
         .num_threads(num_cpus::get())
         .build()
         .unwrap();
-    let mut result = true;
 
-    for entry in WalkDir::new(dir_path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() && is_html_file(&entry) {
-            let urls = parse_html_file(entry.path());
-            let success = pool.install(|| check_urls(&urls, &ctx));
-            result &= success;
-        }
-    }
+    pool.install(|| unavailable_urls(dir_path, ctx).par_bridge().any(|_| true))
+}
 
-    result
+fn unavailable_urls<'a>(
+    dir_path: &'a Path,
+    ctx: &'a CheckContext,
+) -> impl Iterator<Item = Url> + 'a {
+    WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
+        .flat_map(|entry| parse_html_file(entry.path()))
+        .filter(move |url| !is_available(&url, &ctx))
 }

@@ -1,26 +1,14 @@
 //! Provides functionality for checking the availablility of URLs.
 
 use reqwest::{self, StatusCode};
-use std::collections::HashSet;
 use url::Url;
 
 use super::CheckContext;
 
 const PREFIX_BLACKLIST: [&'static str; 1] = ["https://doc.rust-lang.org"];
 
-/// Checks multiple URLs for availability. Returns `false` if at least one ULR is unavailable.
-pub fn check_urls(urls: &HashSet<Url>, ctx: &CheckContext) -> bool {
-    let mut result = true;
-
-    for url in urls {
-        result &= check_url(url, ctx);
-    }
-
-    result
-}
-
 /// Check a single URL for availability. Returns `false` if it is unavailable.
-fn check_url(url: &Url, ctx: &CheckContext) -> bool {
+pub fn is_available(url: &Url, ctx: &CheckContext) -> bool {
     match url.scheme() {
         "file" => check_file_url(url, ctx),
         "http" | "https" => check_http_url(url, ctx),
