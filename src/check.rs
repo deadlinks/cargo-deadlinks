@@ -8,11 +8,13 @@ use super::CheckContext;
 
 const PREFIX_BLACKLIST: [&'static str; 1] = ["https://doc.rust-lang.org"];
 
+#[derive(Debug)]
 pub enum HttpError {
     UnexpectedStatus(Url, StatusCode),
     Fetch(Url, reqwest::Error),
 }
 
+#[derive(Debug)]
 pub enum CheckError {
     File(PathBuf),
     Http(HttpError),

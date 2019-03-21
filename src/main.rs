@@ -14,10 +14,8 @@ extern crate num_cpus;
 extern crate rayon;
 extern crate reqwest;
 extern crate serde_json;
-extern crate walkdir;
 
-mod check;
-mod parse;
+extern crate cargo_deadlinks;
 
 use std::path::{Path, PathBuf};
 use std::process;
@@ -28,10 +26,8 @@ use env_logger::LogBuilder;
 use log::LogLevelFilter;
 
 use rayon::{prelude::*, ThreadPoolBuilder};
-use walkdir::{DirEntry, WalkDir};
 
-use check::{is_available, CheckError, HttpError};
-use parse::parse_html_file;
+use cargo_deadlinks::{unavailable_urls, CheckContext, CheckError, HttpError};
 
 const MAIN_USAGE: &'static str = "
 Check your package's documentation for dead links.
@@ -54,11 +50,6 @@ struct MainArgs {
     flag_verbose: bool,
     flag_debug: bool,
     flag_check_http: bool,
-}
-
-#[derive(Debug)]
-pub struct CheckContext {
-    check_http: bool,
 }
 
 impl Into<CheckContext> for MainArgs {
@@ -153,13 +144,6 @@ fn determine_dir() -> PathBuf {
     }
 }
 
-fn is_html_file(entry: &DirEntry) -> bool {
-    match entry.path().extension() {
-        Some(e) => e.to_str().map(|ext| ext == "html").unwrap_or(false),
-        None => false,
-    }
-}
-
 /// Traverses a given path recursively, checking all *.html files found.
 fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
     let pool = ThreadPoolBuilder::new()
@@ -183,20 +167,4 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
             true
         })
     })
-}
-
-fn unavailable_urls<'a>(
-    dir_path: &'a Path,
-    ctx: &'a CheckContext,
-) -> impl ParallelIterator<Item = CheckError> + 'a {
-    WalkDir::new(dir_path)
-        .into_iter()
-        .par_bridge()
-        .filter_map(|e| e.ok())
-        .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
-        .flat_map(|entry| parse_html_file(entry.path()))
-        .filter_map(move |url| match is_available(&url, &ctx) {
-            Ok(()) => None,
-            Err(err) => Some(err),
-        })
 }
