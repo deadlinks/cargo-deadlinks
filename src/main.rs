@@ -26,12 +26,11 @@ use cargo_metadata::Metadata;
 use docopt::Docopt;
 use env_logger::LogBuilder;
 use log::LogLevelFilter;
-use url::Url;
 
 use rayon::{prelude::*, ThreadPoolBuilder};
 use walkdir::{DirEntry, WalkDir};
 
-use check::is_available;
+use check::{is_available, CheckError, HttpError};
 use parse::parse_html_file;
 
 const MAIN_USAGE: &'static str = "
@@ -168,17 +167,35 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
         .build()
         .unwrap();
 
-    pool.install(|| unavailable_urls(dir_path, ctx).par_bridge().any(|_| true))
+    pool.install(|| {
+        unavailable_urls(dir_path, ctx).par_bridge().any(|err| {
+            match err {
+                CheckError::File(path) => {
+                    error!("Linked file at path {} does not exist!", path.display());
+                }
+                CheckError::Http(HttpError::UnexpectedStatus(url, status)) => {
+                    error!("Unexpected HTTP status fetching {}: {}", url, status);
+                }
+                CheckError::Http(HttpError::Fetch(url, e)) => {
+                    error!("Error fetching {}: {}", url, e);
+                }
+            }
+            true
+        })
+    })
 }
 
 fn unavailable_urls<'a>(
     dir_path: &'a Path,
     ctx: &'a CheckContext,
-) -> impl Iterator<Item = Url> + 'a {
+) -> impl Iterator<Item = CheckError> + 'a {
     WalkDir::new(dir_path)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
         .flat_map(|entry| parse_html_file(entry.path()))
-        .filter(move |url| !is_available(&url, &ctx))
+        .filter_map(move |url| match is_available(&url, &ctx) {
+            Ok(()) => None,
+            Err(err) => Some(err),
+        })
 }
