@@ -152,7 +152,7 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
         .unwrap();
 
     pool.install(|| {
-        unavailable_urls(dir_path, ctx).any(|err| {
+        !unavailable_urls(dir_path, ctx).any(|err| {
             error!("{}", err);
             true
         })

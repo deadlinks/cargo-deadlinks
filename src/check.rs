@@ -94,7 +94,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     let resp = reqwest::get(url.as_str());
     match resp {
         Ok(r) => {
-            if r.status() == StatusCode::Ok {
+            if r.status() == StatusCode::OK {
                 Ok(())
             } else {
                 Err(CheckError::Http(HttpError::UnexpectedStatus(
