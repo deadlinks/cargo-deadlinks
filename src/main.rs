@@ -14,10 +14,8 @@ extern crate num_cpus;
 extern crate rayon;
 extern crate reqwest;
 extern crate serde_json;
-extern crate walkdir;
 
-mod check;
-mod parse;
+extern crate cargo_deadlinks;
 
 use std::path::{Path, PathBuf};
 use std::process;
@@ -27,11 +25,9 @@ use docopt::Docopt;
 use env_logger::LogBuilder;
 use log::LogLevelFilter;
 
-use rayon::ThreadPoolBuilder;
-use walkdir::{DirEntry, WalkDir};
+use rayon::{prelude::*, ThreadPoolBuilder};
 
-use check::check_urls;
-use parse::parse_html_file;
+use cargo_deadlinks::{unavailable_urls, CheckContext};
 
 const MAIN_USAGE: &'static str = "
 Check your package's documentation for dead links.
@@ -54,11 +50,6 @@ struct MainArgs {
     flag_verbose: bool,
     flag_debug: bool,
     flag_check_http: bool,
-}
-
-#[derive(Debug)]
-pub struct CheckContext {
-    check_http: bool,
 }
 
 impl Into<CheckContext> for MainArgs {
@@ -153,28 +144,17 @@ fn determine_dir() -> PathBuf {
     }
 }
 
-fn is_html_file(entry: &DirEntry) -> bool {
-    match entry.path().extension() {
-        Some(e) => e.to_str().map(|ext| ext == "html").unwrap_or(false),
-        None => false,
-    }
-}
-
 /// Traverses a given path recursively, checking all *.html files found.
 fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
         .unwrap();
-    let mut result = true;
 
-    for entry in WalkDir::new(dir_path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() && is_html_file(&entry) {
-            let urls = parse_html_file(entry.path());
-            let success = pool.install(|| check_urls(&urls, &ctx));
-            result &= success;
-        }
-    }
-
-    result
+    pool.install(|| {
+        !unavailable_urls(dir_path, ctx).any(|err| {
+            error!("{}", err);
+            true
+        })
+    })
 }
