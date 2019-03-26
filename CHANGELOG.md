@@ -1,11 +1,21 @@
 <a name="unlreleased"></a>
-## 0.4.0 (UNRELEASED)
+## NEXT (UNRELEASED)
+
+<a name="0.4.1"></a>
+## 0.4.1 (2019-03-26)
+
+#### Features
+
+* Provide a crate in addition to the binary. [PR#48][pr_48] Thanks to [@Marwes][user_marwes]!
+
+<a name="0.4.0"></a>
+## 0.4.0 (2019-03-17)
 
 #### Features
 
 * Add checking of HTTP links via `reqwest` (Thanks to [@gsquire][user_gsquire]!)
   * Can be used with `cargo deadlinks --check-http`
-* Improved error message on missing docs directory. [PR#32][pr_32]
+* Improved error message on missing docs directory. [PR#33][pr_33]
 
 
 <a name="0.3.0"></a>
@@ -30,5 +40,7 @@
 
 <!-- Contributor links -->
 [user_gsquire]: https://github.com/gsquire
+[user_marwes]: https://github.com/Marwes
 
-[pr_32]: https://github.com/deadlinks/cargo-deadlinks/pull/33
+[pr_33]: https://github.com/deadlinks/cargo-deadlinks/pull/33
+[pr_48]: https://github.com/deadlinks/cargo-deadlinks/pull/48
