@@ -16,12 +16,12 @@ pub fn parse_html_file(path: &Path) -> HashSet<Url> {
 
     let base_url = Url::from_file_path(path).unwrap();
     let mut urls = HashSet::new();
-    parse_a_hrefs(dom.document, &base_url, &mut urls);
+    parse_a_hrefs(&dom.document, &base_url, &mut urls);
     urls
 }
 
 /// Traverse the DOM of a parsed HTML element, extracting all URLs from <a href="xxx"> links.
-fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut HashSet<Url>) {
+fn parse_a_hrefs(handle: &Handle, base_url: &Url, urls: &mut HashSet<Url>) {
     let node = handle;
     if let NodeData::Element {
         ref name,
@@ -47,6 +47,6 @@ fn parse_a_hrefs(handle: Handle, base_url: &Url, urls: &mut HashSet<Url>) {
     }
 
     for child in node.children.borrow().iter() {
-        parse_a_hrefs(child.clone(), base_url, urls);
+        parse_a_hrefs(&child, base_url, urls);
     }
 }
