@@ -22,8 +22,7 @@ use std::process;
 
 use cargo_metadata::Metadata;
 use docopt::Docopt;
-use env_logger::LogBuilder;
-use log::LogLevelFilter;
+use log::LevelFilter;
 
 use rayon::{prelude::*, ThreadPoolBuilder};
 
@@ -106,20 +105,22 @@ pub fn metadata_run(additional_args: Option<String>) -> Result<Metadata, ()> {
 
 /// Initalizes the logger according to the provided config flags.
 fn init_logger(args: &MainArgs) {
-    let mut builder = LogBuilder::new();
-    builder.format(|record| format!("{}", record.args()));
+    use std::io::Write;
+
+    let mut builder = env_logger::Builder::new();
+    builder.format(|f, record| writeln!(f, "{}", record.args()));
     match (args.flag_debug, args.flag_verbose) {
         (true, _) => {
-            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Debug);
+            builder.filter(Some("cargo_deadlinks"), LevelFilter::Debug);
         }
         (false, true) => {
-            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Info);
+            builder.filter(Some("cargo_deadlinks"), LevelFilter::Info);
         }
         (false, false) => {
-            builder.filter(Some("cargo_deadlinks"), LogLevelFilter::Error);
+            builder.filter(Some("cargo_deadlinks"), LevelFilter::Error);
         }
     }
-    builder.init().unwrap();
+    builder.init();
 }
 
 /// Returns the directory to use as root of the documentation.
@@ -132,7 +133,11 @@ fn init_logger(args: &MainArgs) {
 fn determine_dir() -> PathBuf {
     match metadata_run(None) {
         Ok(manifest) => {
-            let package_name = manifest.workspace_members[0].name();
+            let package_name = manifest.workspace_members[0]
+                .repr
+                .splitn(3, ' ')
+                .nth(0)
+                .unwrap();
             let package_name = package_name.replace("-", "_");
 
             Path::new("target").join("doc").join(package_name)
