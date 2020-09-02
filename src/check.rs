@@ -91,7 +91,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
         }
     }
 
-    let resp = reqwest::get(url.as_str());
+    let resp = reqwest::blocking::get(url.as_str());
     match resp {
         Ok(r) => {
             if r.status() == StatusCode::OK {
