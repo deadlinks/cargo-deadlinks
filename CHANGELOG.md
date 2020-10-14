@@ -20,6 +20,12 @@
   library. deadlinks will now ignore tests and examples even if they are not
   binaries.
 
+#### Changes
+
+* Switch from `reqwest` to `ureq` for HTTP-checking, cutting down the number of dependencies by almost a third. [PR#95]
+
+[PR#95]: https://github.com/deadlinks/cargo-deadlinks/pull/95
+
 <a name="0.4.2"></a>
 ## 0.4.2 (2020-10-12)
 

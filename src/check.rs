@@ -2,7 +2,6 @@
 use std::{fmt, path::PathBuf};
 
 use log::debug;
-use reqwest::{self, StatusCode};
 use url::Url;
 
 use super::CheckContext;
@@ -11,16 +10,19 @@ const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
 #[derive(Debug)]
 pub enum HttpError {
-    UnexpectedStatus(Url, StatusCode),
-    Fetch(Url, reqwest::Error),
+    UnexpectedStatus(Url, ureq::Response),
+    Fetch(Url, ureq::Error),
 }
 
 impl fmt::Display for HttpError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            HttpError::UnexpectedStatus(url, status) => {
-                write!(f, "Unexpected HTTP status fetching {}: {}", url, status)
-            }
+            HttpError::UnexpectedStatus(url, resp) => write!(
+                f,
+                "Unexpected HTTP status fetching {}: {}",
+                url,
+                resp.status_text()
+            ),
             HttpError::Fetch(url, e) => write!(f, "Error fetching {}: {}", url, e),
         }
     }
@@ -29,7 +31,7 @@ impl fmt::Display for HttpError {
 #[derive(Debug)]
 pub enum CheckError {
     File(PathBuf),
-    Http(HttpError),
+    Http(Box<HttpError>),
 }
 
 impl fmt::Display for CheckError {
@@ -92,19 +94,19 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
         }
     }
 
-    let resp = reqwest::blocking::Client::new().head(url.as_str()).send();
-    match resp {
-        Ok(r) => {
-            if r.status() == StatusCode::OK {
-                Ok(())
-            } else {
-                Err(CheckError::Http(HttpError::UnexpectedStatus(
-                    url.clone(),
-                    r.status(),
-                )))
-            }
-        }
-        Err(e) => Err(CheckError::Http(HttpError::Fetch(url.clone(), e))),
+    let resp = ureq::head(url.as_str()).call();
+    if resp.synthetic() {
+        Err(CheckError::Http(Box::new(HttpError::Fetch(
+            url.clone(),
+            resp.into_synthetic_error().unwrap(),
+        ))))
+    } else if resp.ok() {
+        Ok(())
+    } else {
+        Err(CheckError::Http(Box::new(HttpError::UnexpectedStatus(
+            url.clone(),
+            resp,
+        ))))
     }
 }
 
