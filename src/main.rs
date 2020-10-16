@@ -140,7 +140,7 @@ fn determine_dir() -> PathBuf {
                 .unwrap();
             let package_name = package_name.replace("-", "_");
 
-            Path::new("target").join("doc").join(package_name)
+            manifest.target_directory.join("doc").join(package_name)
         }
         Err(_) => {
             error!("Could not find a Cargo.toml.");
