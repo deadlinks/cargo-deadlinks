@@ -6,7 +6,7 @@ use url::Url;
 
 use super::CheckContext;
 
-const PREFIX_BLACKLIST: [&'static str; 1] = ["https://doc.rust-lang.org"];
+const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
 #[derive(Debug)]
 pub enum HttpError {
