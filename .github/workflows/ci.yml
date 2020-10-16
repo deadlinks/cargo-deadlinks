@@ -48,10 +48,10 @@ jobs:
           args: --stamp
 
       - name: Build
-        run: cargo build --locked
+        run: cargo build
 
       - name: Test
-        run: cargo test --locked
+        run: cargo test
 
       - name: Clean unused artifacts
         uses: actions-rs/cargo@v1
@@ -121,7 +121,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --locked -- -D warnings
+          args: -- -D warnings
 
       - name: Clean unused artifacts
         uses: actions-rs/cargo@v1
