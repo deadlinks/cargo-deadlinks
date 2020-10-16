@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish:
+    name: Publish deadlinks for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [linux, windows, macos]
+
+      include:
+        - name: linux
+          os: ubuntu-latest
+          artifact_name: cargo-deadlinks
+          asset_name: deadlinks-linux
+        - name: windows
+          os: windows-latest
+          artifact_name: cargo-deadlinks.exe
+          asset_name: deadlinks-windows
+        - name: macos
+          os: macos-latest
+          artifact_name: cargo-deadlinks
+          asset_name: deadlinks-macos
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
