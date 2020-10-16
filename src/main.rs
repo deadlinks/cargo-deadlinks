@@ -28,7 +28,7 @@ use rayon::{prelude::*, ThreadPoolBuilder};
 
 use cargo_deadlinks::{unavailable_urls, CheckContext};
 
-const MAIN_USAGE: &'static str = "
+const MAIN_USAGE: &str = "
 Check your package's documentation for dead links.
 
 Usage:
@@ -72,12 +72,12 @@ fn main() {
     let dir = args
         .arg_directory
         .clone()
-        .map_or_else(determine_dir, |dir| PathBuf::from(dir));
+        .map_or_else(determine_dir, PathBuf::from);
     let dir = match dir.canonicalize() {
         Ok(dir) => dir,
         Err(_) => {
             println!("Could not find directory {:?}.", dir);
-            println!("");
+            println!();
             println!("Please run `cargo doc` before running `cargo deadlinks`.");
             process::exit(1);
         }
@@ -136,7 +136,7 @@ fn determine_dir() -> PathBuf {
             let package_name = manifest.workspace_members[0]
                 .repr
                 .splitn(3, ' ')
-                .nth(0)
+                .next()
                 .unwrap();
             let package_name = package_name.replace("-", "_");
 

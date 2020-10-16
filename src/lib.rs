@@ -44,7 +44,7 @@ impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Found invalid urls in {}:", self.path.display(),)?;
         for err in &self.errors {
-            writeln!(f, "")?;
+            writeln!(f)?;
             write!(f, "\t{}", err)?;
         }
         Ok(())
