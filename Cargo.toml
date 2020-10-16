@@ -3,6 +3,7 @@ name = "cargo-deadlinks"
 description = "Cargo subcommand for checking your documentation for broken links"
 version = "0.4.2"
 authors = ["Maximilian Goisser <goisser94@gmail.com>", "Joshua Nelson <jyn514@gmail.com"]
+edition = "2018"
 repository = "https://github.com/deadlinks/cargo-deadlinks"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
