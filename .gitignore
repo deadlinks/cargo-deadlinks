@@ -1,3 +1,4 @@
+tests/simple_project/target2/
 target
 Cargo.lock
 !/Cargo.lock
