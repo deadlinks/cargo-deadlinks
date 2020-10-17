@@ -87,7 +87,7 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        if !walk_dir(&dir, &ctx) {
+        if walk_dir(&dir, &ctx) {
             errors = true;
         }
     }
@@ -180,6 +180,8 @@ fn determine_dir() -> Vec<PathBuf> {
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
+///
+/// Returns whether an error occurred.
 fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
@@ -187,9 +189,12 @@ fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
         .unwrap();
 
     pool.install(|| {
-        !unavailable_urls(dir_path, ctx).any(|err| {
-            error!("{}", err);
-            true
-        })
+        unavailable_urls(dir_path, ctx)
+            .map(|err| {
+                error!("{}", err);
+                true
+            })
+            // ||||||
+            .reduce(|| false, |initial, new| initial || new)
     })
 }
