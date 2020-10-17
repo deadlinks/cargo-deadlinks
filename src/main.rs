@@ -97,10 +97,23 @@ pub fn metadata_run(additional_args: Option<String>) -> Result<Metadata, ()> {
         cmd.arg(&additional_args);
     }
 
-    let output = cmd.output().unwrap();
-    let stdout = std::str::from_utf8(&output.stdout).unwrap();
-    let meta = serde_json::from_str(stdout).unwrap();
-    Ok(meta)
+    let fail_msg = "failed to run `cargo metadata` - do you have cargo installed?";
+    let output = cmd
+        .stdout(process::Stdio::piped())
+        .spawn()
+        .expect(fail_msg)
+        .wait_with_output()
+        .expect(fail_msg);
+
+    if !output.status.success() {
+        // don't need more info because we didn't capture stderr;
+        // hopefully `cargo metadata` gave a useful error, but if not we can't do
+        // anything
+        return Err(());
+    }
+
+    let stdout = std::str::from_utf8(&output.stdout).expect("invalid UTF8");
+    Ok(serde_json::from_str(stdout).expect("invalid JSON"))
 }
 
 /// Initalizes the logger according to the provided config flags.
@@ -143,7 +156,7 @@ fn determine_dir() -> PathBuf {
             manifest.target_directory.join("doc").join(package_name)
         }
         Err(_) => {
-            error!("Could not find a Cargo.toml.");
+            error!("help: if this is not a cargo directory, use `--dir`");
             ::std::process::exit(1);
         }
     }
