@@ -13,19 +13,19 @@ jobs:
       matrix:
         name: [linux, windows, macos]
 
-      include:
-        - name: linux
-          os: ubuntu-latest
-          artifact_name: cargo-deadlinks
-          asset_name: deadlinks-linux
-        - name: windows
-          os: windows-latest
-          artifact_name: cargo-deadlinks.exe
-          asset_name: deadlinks-windows
-        - name: macos
-          os: macos-latest
-          artifact_name: cargo-deadlinks
-          asset_name: deadlinks-macos
+        include:
+          - name: linux
+            os: ubuntu-latest
+            artifact_name: cargo-deadlinks
+            asset_name: deadlinks-linux
+          - name: windows
+            os: windows-latest
+            artifact_name: cargo-deadlinks.exe
+            asset_name: deadlinks-windows
+          - name: macos
+            os: macos-latest
+            artifact_name: cargo-deadlinks
+            asset_name: deadlinks-macos
 
     steps:
       - uses: actions/checkout@v1
