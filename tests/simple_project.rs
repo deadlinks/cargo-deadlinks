@@ -21,12 +21,15 @@ fn remove_all(path: &str) {
     };
 }
 
-fn assert_doc(dir: impl AsRef<Path>) -> assert_cmd::assert::Assert {
+#[must_use = "Assert does nothing until you specify an assert"]
+fn assert_doc(dir: impl AsRef<Path>, env: &[(&str, &str)]) -> assert_cmd::assert::Assert {
     let dir = dir.as_ref();
 
     // generate docs
     Command::new("cargo")
         .arg("doc")
+        .env_remove("CARGO_TARGET_DIR")
+        .envs(env.iter().copied())
         .current_dir(dir)
         .assert()
         .success();
@@ -35,6 +38,8 @@ fn assert_doc(dir: impl AsRef<Path>) -> assert_cmd::assert::Assert {
     Command::cargo_bin("cargo-deadlinks")
         .unwrap()
         .arg("deadlinks")
+        .env_remove("CARGO_TARGET_DIR")
+        .envs(env.iter().copied())
         .current_dir(dir)
         .assert()
 }
@@ -58,8 +63,6 @@ mod simple_project {
 
     #[test]
     fn it_checks_okay_project_correctly() {
-        env::remove_var("CARGO_TARGET_DIR");
-
         // cargo-deadlinks fails when docs have not been generated before
         remove_all("./tests/simple_project/target");
 
@@ -77,18 +80,18 @@ mod simple_project {
                     )),
             );
 
-        assert_doc("./tests/simple_project").success();
+        assert_doc("./tests/simple_project", &[]).success();
 
-        // NOTE: can't be parallel because of use of `set_var`
-        env::set_var("CARGO_TARGET_DIR", "target2");
         remove_all("./tests/simple_project/target2");
-        assert_doc("./tests/simple_project").success();
+        assert_doc("./tests/simple_project", &[("CARGO_TARGET_DIR", "target2")]).success();
 
-        env::remove_var("CARGO_TARGET_DIR");
-        env::set_var("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu");
         remove_all("./tests/simple_project/target");
         // This currently breaks due to a cargo bug: https://github.com/rust-lang/cargo/issues/8791
-        assert_doc("./tests/simple_project").failure();
+        assert_doc(
+            "./tests/simple_project",
+            &[("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu")],
+        )
+        .failure();
     }
 }
 
@@ -98,6 +101,6 @@ mod renamed_project {
     #[test]
     fn it_follows_package_renames() {
         remove_all("./tests/renamed_package/target");
-        assert_doc("./tests/renamed_package");
+        assert_doc("./tests/renamed_package", &[]).success();
     }
 }

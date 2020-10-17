@@ -162,7 +162,7 @@ fn determine_dir() -> Vec<PathBuf> {
         .map(|package| package.targets)
         .flatten()
         .filter(|target| target.kind.iter().all(|kind| kind != "test"))
-        .map(|target| doc.join(target.name))
+        .map(|target| doc.join(target.name.replace('-', "_")))
         .collect()
 }
 
