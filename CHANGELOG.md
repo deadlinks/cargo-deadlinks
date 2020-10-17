@@ -1,6 +1,10 @@
 <a name="unreleased"></a>
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* Add support for cargo workspaces. Check all crates and targets in the workspaces, excluding tests, benches, and examples. [PR#68], [PR#73]
+
 #### Fixes
 
 * Take `CARGO_TARGET_DIR` into account when looking for the target directory. [PR#66]
@@ -9,6 +13,7 @@
 
 [PR#66]: https://github.com/deadlinks/cargo-deadlinks/pull/66
 [PR#67]: https://github.com/deadlinks/cargo-deadlinks/pull/67
+[PR#73]: https://github.com/deadlinks/cargo-deadlinks/pull/73
 
 #### Changes
 

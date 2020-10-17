@@ -104,3 +104,13 @@ mod renamed_project {
         assert_doc("./tests/renamed_package", &[]).success();
     }
 }
+
+mod workspace {
+    use super::*;
+
+    #[test]
+    fn it_checks_workspaces() {
+        remove_all("./tests/workspace/target");
+        assert_doc("./tests/workspace", &[]).success();
+    }
+}
