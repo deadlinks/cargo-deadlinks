@@ -69,22 +69,25 @@ fn main() {
 
     init_logger(&args);
 
-    let dir = args
+    let dirs = args
         .arg_directory
-        .clone()
-        .map_or_else(determine_dir, PathBuf::from);
-    let dir = match dir.canonicalize() {
-        Ok(dir) => dir,
-        Err(_) => {
-            println!("Could not find directory {:?}.", dir);
-            println!();
-            println!("Please run `cargo doc` before running `cargo deadlinks`.");
+        .as_ref()
+        .map_or_else(determine_dir, |dir| vec![dir.into()]);
+
+    let ctx: CheckContext = args.into();
+    for dir in dirs {
+        let dir = match dir.canonicalize() {
+            Ok(dir) => dir,
+            Err(_) => {
+                println!("Could not find directory {:?}.", dir);
+                println!();
+                println!("Please run `cargo doc` before running `cargo deadlinks`.");
+                process::exit(1);
+            }
+        };
+        if !walk_dir(&dir, &ctx) {
             process::exit(1);
         }
-    };
-    let ctx: CheckContext = args.into();
-    if !walk_dir(&dir, &ctx) {
-        process::exit(1);
     }
 }
 
@@ -143,23 +146,24 @@ fn init_logger(args: &MainArgs) {
 /// from the package name found there.
 ///
 /// All *.html files under the root directory will be checked.
-fn determine_dir() -> PathBuf {
-    match metadata_run(None) {
-        Ok(manifest) => {
-            let package_name = manifest.workspace_members[0]
-                .repr
-                .splitn(3, ' ')
-                .next()
-                .unwrap();
-            let package_name = package_name.replace("-", "_");
+fn determine_dir() -> Vec<PathBuf> {
+    let manifest = metadata_run(None).unwrap_or_else(|()| {
+        error!("help: if this is not a cargo directory, use `--dir`");
+        ::std::process::exit(1);
+    });
+    let doc = manifest.target_directory.join("doc");
 
-            manifest.target_directory.join("doc").join(package_name)
-        }
-        Err(_) => {
-            error!("help: if this is not a cargo directory, use `--dir`");
-            ::std::process::exit(1);
-        }
-    }
+    // originally written with this impressively bad jq query:
+    // `.packages[] |select(.source == null) | .targets[] | select(.kind[] | contains("test") | not) | .name`
+    manifest
+        .packages
+        .into_iter()
+        .filter(|package| package.source.is_none())
+        .map(|package| package.targets)
+        .flatten()
+        .filter(|target| target.kind.iter().all(|kind| kind != "test"))
+        .map(|target| doc.join(target.name))
+        .collect()
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
