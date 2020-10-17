@@ -1,5 +1,5 @@
 [package]
-name = "simple_project"
+name = "working_http_check"
 version = "0.1.0"
 authors = ["Maximilian Goisser <goisser94@gmail.com>"]
 edition = "2018"
