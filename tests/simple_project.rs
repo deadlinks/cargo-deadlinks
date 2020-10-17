@@ -2,7 +2,9 @@ extern crate assert_cmd;
 extern crate predicates;
 
 use assert_cmd::prelude::*;
+use predicate::str::contains;
 use predicates::prelude::*;
+use std::env;
 use std::process::Command;
 
 mod simple_project {
@@ -38,10 +40,22 @@ mod simple_project {
     }
 
     #[test]
-    fn it_checks_okay_project_correctly() {
-        use predicate::str::contains;
+    fn it_gives_help_if_cargo_toml_missing() {
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .arg("deadlinks")
+            .current_dir(env::temp_dir())
+            .assert()
+            .failure()
+            .stderr(
+                contains("help: if this is not a cargo directory, use `--dir`")
+                    .and(contains("error: could not find `Cargo.toml`")),
+            );
+    }
 
-        std::env::remove_var("CARGO_TARGET_DIR");
+    #[test]
+    fn it_checks_okay_project_correctly() {
+        env::remove_var("CARGO_TARGET_DIR");
 
         // cargo-deadlinks fails when docs have not been generated before
         remove_all("./tests/simple_project/target");
@@ -63,12 +77,12 @@ mod simple_project {
         assert_doc().success();
 
         // NOTE: can't be parallel because of use of `set_var`
-        std::env::set_var("CARGO_TARGET_DIR", "target2");
+        env::set_var("CARGO_TARGET_DIR", "target2");
         remove_all("./tests/simple_project/target2");
         assert_doc().success();
 
-        std::env::remove_var("CARGO_TARGET_DIR");
-        std::env::set_var("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu");
+        env::remove_var("CARGO_TARGET_DIR");
+        env::set_var("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu");
         remove_all("./tests/simple_project/target");
         // This currently breaks due to a cargo bug: https://github.com/rust-lang/cargo/issues/8791
         assert_doc().failure();

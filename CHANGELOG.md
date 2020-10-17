@@ -4,8 +4,10 @@
 #### Fixes
 
 * Take `CARGO_TARGET_DIR` into account when looking for the target directory. [PR#66]
+* Give a better error message if Cargo.toml is not present. [PR#67]
 
 [PR#66]: https://github.com/deadlinks/cargo-deadlinks/pull/66
+[PR#67]: https://github.com/deadlinks/cargo-deadlinks/pull/67
 
 #### Changes
 
