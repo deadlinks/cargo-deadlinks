@@ -75,6 +75,7 @@ fn main() {
         .map_or_else(determine_dir, |dir| vec![dir.into()]);
 
     let ctx: CheckContext = args.into();
+    let mut errors = false;
     for dir in dirs {
         let dir = match dir.canonicalize() {
             Ok(dir) => dir,
@@ -85,9 +86,13 @@ fn main() {
                 process::exit(1);
             }
         };
+        log::info!("checking directory {:?}", dir);
         if !walk_dir(&dir, &ctx) {
-            process::exit(1);
+            errors = true;
         }
+    }
+    if errors {
+        process::exit(1);
     }
 }
 
@@ -161,7 +166,15 @@ fn determine_dir() -> Vec<PathBuf> {
         .filter(|package| package.source.is_none())
         .map(|package| package.targets)
         .flatten()
-        .filter(|target| target.kind.iter().all(|kind| kind != "test"))
+        .filter(|target| {
+            // Ignore tests, examples, and benchmarks, but still document binaries
+
+            // See https://doc.rust-lang.org/cargo/reference/external-tools.html#compiler-messages
+            // and https://github.com/rust-lang/docs.rs/issues/503#issuecomment-562797599
+            // for the difference between `kind` and `crate_type`
+            !target.crate_types.contains(&"bin".into())
+                || target.kind.iter().all(|kind| kind == "bin")
+        })
         .map(|target| doc.join(target.name.replace('-', "_")))
         .collect()
 }
