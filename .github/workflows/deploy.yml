@@ -6,7 +6,16 @@ on:
       - '*'
 
 jobs:
-  publish:
+  crates_io:
+    name: Publish deadlinks to crates.io
+    steps:
+      - uses: actions/checkout@v1
+      - run: cargo login ${CRATES_IO_TOKEN}
+        env:
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+      - run: cargo publish
+
+  github:
     name: Publish deadlinks for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
