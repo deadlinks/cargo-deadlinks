@@ -1,5 +1,20 @@
-<a name="unlreleased"></a>
+<a name="unreleased"></a>
 ## NEXT (UNRELEASED)
+
+#### Fixes
+
+* Take `CARGO_TARGET_DIR` into account when looking for the target directory. [PR#66]
+
+[PR#66]: https://github.com/deadlinks/cargo-deadlinks/pull/66
+
+#### Changes
+
+* Update dependencies. [PR#51] Thanks to [@Marwes][user_marwes]!
+* Use HEAD instead of GET for HTTP requests. This should decrease the time for HTTP checks slightly. [PR#63] Thanks to [@zummenix]!
+
+[@zummenix]: https://github.com/zummenix
+[PR#51]: https://github.com/deadlinks/cargo-deadlinks/pull/51
+[PR#63]: https://github.com/deadlinks/cargo-deadlinks/pull/63
 
 <a name="0.4.1"></a>
 ## 0.4.1 (2019-03-26)
