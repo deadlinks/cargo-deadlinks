@@ -6,6 +6,8 @@ pub fn foo() {}
 /// Bar function
 pub fn bar() {}
 
+/// [Correct link](crate::bar)
+pub struct Tmp {}
 #[cfg(test)]
 mod tests {
     #[test]
