@@ -93,6 +93,43 @@ mod simple_project {
             &[("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu")],
         )
         .failure();
+
+        // fn it_shortens_path_on_error
+        remove_all("./tests/simple_project/target");
+        assert_doc("./tests/simple_project", &[]).success();
+        std::fs::remove_file("./tests/simple_project/target/doc/simple_project/fn.bar.html")
+            .unwrap();
+
+        // without --debug, paths are shortened
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .arg("deadlinks")
+            .current_dir("./tests/simple_project")
+            .assert()
+            .failure()
+            .stderr(
+                contains("Linked file at path fn.bar.html does not exist!")
+                    .and(contains("Found invalid urls in fn.foo.html:")),
+            );
+
+        // with --debug, paths are not shortened
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .arg("deadlinks")
+            .arg("--debug")
+            .current_dir("./tests/simple_project")
+            .assert()
+            .failure()
+            .stderr(
+                contains(
+                    "cargo-deadlinks/tests/simple_project/ta\
+                  rget/doc/simple_project/fn.foo.html:",
+                )
+                .and(contains(
+                    "cargo-deadlinks/tests/simple_proj\
+                    ect/target/doc/simple_project/fn.bar.html does not exist!",
+                )),
+            );
     }
 }
 

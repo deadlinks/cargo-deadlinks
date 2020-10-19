@@ -74,7 +74,6 @@ fn main() {
         .as_ref()
         .map_or_else(determine_dir, |dir| vec![dir.into()]);
 
-    let ctx: CheckContext = args.into();
     let mut errors = false;
     for dir in dirs {
         let dir = match dir.canonicalize() {
@@ -87,7 +86,7 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        if walk_dir(&dir, &ctx) {
+        if walk_dir(&dir, &args) {
             errors = true;
         }
     }
@@ -182,16 +181,23 @@ fn determine_dir() -> Vec<PathBuf> {
 /// Traverses a given path recursively, checking all *.html files found.
 ///
 /// Returns whether an error occurred.
-fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
+fn walk_dir(dir_path: &Path, args: &MainArgs) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
         .unwrap();
 
+    let ctx = CheckContext {
+        check_http: args.flag_check_http,
+    };
     pool.install(|| {
-        unavailable_urls(dir_path, ctx)
+        unavailable_urls(dir_path, &ctx)
             .map(|err| {
-                error!("{}", err);
+                if args.flag_debug {
+                    error!("{}", err);
+                } else {
+                    error!("{}", err.print_shortened(Some(dir_path)));
+                }
                 true
             })
             // ||||||

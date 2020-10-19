@@ -42,12 +42,31 @@ pub struct FileError {
 
 impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Found invalid urls in {}:", self.path.display(),)?;
-        for err in &self.errors {
-            writeln!(f)?;
-            write!(f, "\t{}", err)?;
-        }
+        write!(f, "{}", self.print_shortened(None))?;
         Ok(())
+    }
+}
+
+impl FileError {
+    pub fn print_shortened(&self, prefix: Option<&Path>) -> String {
+        let prefix = prefix.unwrap_or_else(|| Path::new(""));
+        let filepath = self.path.strip_prefix(&prefix).unwrap_or(&self.path);
+        let mut ret = format!("Found invalid urls in {}:", filepath.display());
+
+        for e in &self.errors {
+            use CheckError::*;
+
+            match e {
+                Http(_) => ret.push_str(&format!("\n\t{}", e)),
+                File(epath) => {
+                    let epath = epath.strip_prefix(&prefix).unwrap_or(&epath);
+                    ret.push_str("\n\tLinked file at path ");
+                    ret.push_str(&epath.display().to_string());
+                    ret.push_str(" does not exist!");
+                }
+            }
+        }
+        ret
     }
 }
 
@@ -80,10 +99,8 @@ pub fn unavailable_urls<'a>(
             if errors.is_empty() {
                 None
             } else {
-                Some(FileError {
-                    path: entry.path().to_owned(),
-                    errors,
-                })
+                let path = entry.path().to_owned();
+                Some(FileError { path, errors })
             }
         })
 }
