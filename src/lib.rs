@@ -6,6 +6,9 @@ extern crate log;
 extern crate html5ever;
 extern crate url;
 
+#[macro_use]
+extern crate serde_derive;
+
 extern crate cargo_metadata;
 extern crate num_cpus;
 extern crate rayon;
@@ -29,9 +32,12 @@ pub use check::{CheckError, HttpError};
 mod check;
 mod parse;
 
-#[derive(Debug)]
-pub struct CheckContext {
-    pub check_http: bool,
+#[derive(Debug, Deserialize)]
+pub struct MainArgs {
+    pub arg_directory: Option<String>,
+    pub flag_verbose: bool,
+    pub flag_debug: bool,
+    pub flag_check_http: bool,
 }
 
 #[derive(Debug)]
@@ -60,7 +66,7 @@ fn is_html_file(entry: &DirEntry) -> bool {
 
 pub fn unavailable_urls<'a>(
     dir_path: &'a Path,
-    ctx: &'a CheckContext,
+    ctx: &'a MainArgs,
 ) -> impl ParallelIterator<Item = FileError> + 'a {
     WalkDir::new(dir_path)
         .into_iter()

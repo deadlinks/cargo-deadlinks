@@ -3,7 +3,6 @@ extern crate env_logger;
 #[macro_use]
 extern crate log;
 
-#[macro_use]
 extern crate serde_derive;
 
 extern crate html5ever;
@@ -26,7 +25,7 @@ use log::LevelFilter;
 
 use rayon::{prelude::*, ThreadPoolBuilder};
 
-use cargo_deadlinks::{unavailable_urls, CheckContext};
+use cargo_deadlinks::{unavailable_urls, MainArgs};
 
 const MAIN_USAGE: &str = "
 Check your package's documentation for dead links.
@@ -41,23 +40,8 @@ Options:
     --debug                 Use debug output
     -v --verbose            Use verbose output
     -V --version            Print version info and exit.
+    -b --basedir            Report paths relative to this (default is target/doc/<package>
 ";
-
-#[derive(Debug, Deserialize)]
-struct MainArgs {
-    arg_directory: Option<String>,
-    flag_verbose: bool,
-    flag_debug: bool,
-    flag_check_http: bool,
-}
-
-impl Into<CheckContext> for MainArgs {
-    fn into(self) -> CheckContext {
-        CheckContext {
-            check_http: self.flag_check_http,
-        }
-    }
-}
 
 fn main() {
     let args: MainArgs = Docopt::new(MAIN_USAGE)
@@ -74,7 +58,6 @@ fn main() {
         .as_ref()
         .map_or_else(determine_dir, |dir| vec![dir.into()]);
 
-    let ctx: CheckContext = args.into();
     let mut errors = false;
     for dir in dirs {
         let dir = match dir.canonicalize() {
@@ -87,7 +70,7 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        if !walk_dir(&dir, &ctx) {
+        if !walk_dir(&dir, &args) {
             errors = true;
         }
     }
@@ -180,14 +163,14 @@ fn determine_dir() -> Vec<PathBuf> {
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
-fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
+fn walk_dir(dir_path: &Path, args: &MainArgs) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
         .unwrap();
 
     pool.install(|| {
-        !unavailable_urls(dir_path, ctx).any(|err| {
+        !unavailable_urls(dir_path, args).any(|err| {
             error!("{}", err);
             true
         })

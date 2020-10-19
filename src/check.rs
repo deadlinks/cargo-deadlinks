@@ -4,7 +4,7 @@ use std::{fmt, path::PathBuf};
 use reqwest::{self, StatusCode};
 use url::Url;
 
-use super::CheckContext;
+use crate::MainArgs;
 
 const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
@@ -43,7 +43,7 @@ impl fmt::Display for CheckError {
 }
 
 /// Check a single URL for availability. Returns `false` if it is unavailable.
-pub fn is_available(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
+pub(crate) fn is_available(url: &Url, ctx: &MainArgs) -> Result<(), CheckError> {
     match url.scheme() {
         "file" => check_file_url(url, ctx),
         "http" | "https" => check_http_url(url, ctx),
@@ -59,7 +59,7 @@ pub fn is_available(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 }
 
 /// Check a URL with the "file" scheme for availability. Returns `false` if it is unavailable.
-fn check_file_url(url: &Url, _ctx: &CheckContext) -> Result<(), CheckError> {
+fn check_file_url(url: &Url, _args: &MainArgs) -> Result<(), CheckError> {
     let path = url.to_file_path().unwrap();
 
     if path.exists() {
@@ -72,8 +72,8 @@ fn check_file_url(url: &Url, _ctx: &CheckContext) -> Result<(), CheckError> {
 }
 
 /// Check a URL with "http" or "https" scheme for availability. Returns `false` if it is unavailable.
-fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
-    if !ctx.check_http {
+fn check_http_url(url: &Url, args: &MainArgs) -> Result<(), CheckError> {
+    if !args.flag_check_http {
         debug!(
             "Skip checking {} as checking of http URLs is turned off",
             url
