@@ -23,8 +23,7 @@ fn remove_all(path: &str) {
 
 fn deadlinks() -> Command {
     let mut cmd = Command::cargo_bin("cargo-deadlinks").unwrap();
-    cmd.arg("deadlinks")
-       .env_remove("CARGO_TARGET_DIR");
+    cmd.arg("deadlinks").env_remove("CARGO_TARGET_DIR");
     cmd
 }
 
