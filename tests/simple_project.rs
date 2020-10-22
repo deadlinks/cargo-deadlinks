@@ -70,6 +70,7 @@ mod simple_project {
             .unwrap()
             .arg("deadlinks")
             .current_dir("./tests/simple_project")
+            .env_remove("CARGO_TARGET_DIR")
             .assert()
             .failure()
             .stdout(
