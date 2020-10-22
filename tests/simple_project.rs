@@ -21,6 +21,13 @@ fn remove_all(path: &str) {
     };
 }
 
+fn deadlinks() -> Command {
+    let mut cmd = Command::cargo_bin("cargo-deadlinks").unwrap();
+    cmd.arg("deadlinks")
+       .env_remove("CARGO_TARGET_DIR");
+    cmd
+}
+
 #[must_use = "Assert does nothing until you specify an assert"]
 fn assert_doc(dir: impl AsRef<Path>, env: &[(&str, &str)]) -> assert_cmd::assert::Assert {
     let dir = dir.as_ref();
@@ -35,10 +42,7 @@ fn assert_doc(dir: impl AsRef<Path>, env: &[(&str, &str)]) -> assert_cmd::assert
         .success();
 
     // succeeds with generated docs
-    Command::cargo_bin("cargo-deadlinks")
-        .unwrap()
-        .arg("deadlinks")
-        .env_remove("CARGO_TARGET_DIR")
+    deadlinks()
         .envs(env.iter().copied())
         .current_dir(dir)
         .assert()
@@ -49,9 +53,7 @@ mod simple_project {
 
     #[test]
     fn it_gives_help_if_cargo_toml_missing() {
-        Command::cargo_bin("cargo-deadlinks")
-            .unwrap()
-            .arg("deadlinks")
+        deadlinks()
             .current_dir(env::temp_dir())
             .assert()
             .failure()
@@ -66,11 +68,8 @@ mod simple_project {
         // cargo-deadlinks fails when docs have not been generated before
         remove_all("./tests/simple_project/target");
 
-        Command::cargo_bin("cargo-deadlinks")
-            .unwrap()
-            .arg("deadlinks")
+        deadlinks()
             .current_dir("./tests/simple_project")
-            .env_remove("CARGO_TARGET_DIR")
             .assert()
             .failure()
             .stdout(
@@ -101,9 +100,7 @@ mod simple_project {
             .unwrap();
 
         // without --debug, paths are shortened
-        Command::cargo_bin("cargo-deadlinks")
-            .unwrap()
-            .arg("deadlinks")
+        deadlinks()
             .current_dir("./tests/simple_project")
             .assert()
             .failure()
@@ -113,9 +110,7 @@ mod simple_project {
             );
 
         // with --debug, paths are not shortened
-        Command::cargo_bin("cargo-deadlinks")
-            .unwrap()
-            .arg("deadlinks")
+        deadlinks()
             .arg("--debug")
             .current_dir("./tests/simple_project")
             .assert()
