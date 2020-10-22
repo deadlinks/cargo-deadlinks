@@ -1,9 +1,14 @@
 <a name="unreleased"></a>
+
 ## NEXT (UNRELEASED)
 
 #### Added
 
 * Add support for cargo workspaces. Check all crates and targets in the workspaces, excluding tests, benches, and examples. [PR#68], [PR#73]
+* Add automatic binary releases. [PR#64] You can find the releases at [/releases] on the GitHub page.
+
+[PR#64]: https://github.com/deadlinks/cargo-deadlinks/pull/64
+[/releases]: https://github.com/deadlinks/cargo-deadlinks/releases
 
 #### Fixes
 
@@ -22,14 +27,18 @@
 
 #### Changes
 
-* Update dependencies. [PR#51] Thanks to [@Marwes][user_marwes]!
+* Update dependencies. [PR#51], [PR#76], [22fa61df] Thanks to [@Marwes][user_marwes]!
 * Use HEAD instead of GET for HTTP requests. This should decrease the time for HTTP checks slightly. [PR#63] Thanks to [@zummenix]!
 * Check all targets, not just targets with the same name as the package. In particular, this now checks both binaries and libraries. [PR#68]
+* Shorten path names when `--debug` is not passed. [PR#20]
 
 [@zummenix]: https://github.com/zummenix
+[PR#20]: https://github.com/deadlinks/cargo-deadlinks/pull/20
 [PR#51]: https://github.com/deadlinks/cargo-deadlinks/pull/51
 [PR#63]: https://github.com/deadlinks/cargo-deadlinks/pull/63
 [PR#68]: https://github.com/deadlinks/cargo-deadlinks/pull/68
+[PR#76]: https://github.com/deadlinks/cargo-deadlinks/pull/76
+[22fa61df]: https://github.com/deadlinks/cargo-deadlinks/commit/22fa61df44820d7f05415e026fa8396ee0e82954
 
 <a name="0.4.1"></a>
 ## 0.4.1 (2019-03-26)
