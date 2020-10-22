@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.4.2"></a>
+## 0.4.2 (2020-10-12)
+
 #### Added
 
 * Add support for cargo workspaces. Check all crates and targets in the workspaces, excluding tests, benches, and examples. [PR#68], [PR#73]
@@ -17,8 +20,8 @@
 * Follow target renames. [PR#68]
 * Always output all errors instead of stopping after the first error. [PR#74]
 
-  Previously, deadlinks would stop after the first error, but leave other threads running in parallel. This would lead to non-deterministic and incomplete output if there were broken links in many different files.
-  Deadlinks will now output all errors before exiting.
+Previously, deadlinks would stop after the first error, but leave other threads running in parallel. This would lead to non-deterministic and incomplete output if there were broken links in many different files.
+Deadlinks will now output all errors before exiting.
 
 [PR#66]: https://github.com/deadlinks/cargo-deadlinks/pull/66
 [PR#67]: https://github.com/deadlinks/cargo-deadlinks/pull/67
