@@ -2,6 +2,16 @@
 
 ## NEXT (UNRELEASED)
 
+#### Fixes
+
+* No longer try to document examples that are dynamic libraries
+
+  This was a regression introduced by [PR#68]. That looked at all targets to
+  see which should be documented, but the logic for determining whether a target
+  had docs was incorrect - it counted tests and examples if they were marked as a
+  library. deadlinks will now ignore tests and examples even if they are not
+  binaries.
+
 <a name="0.4.2"></a>
 ## 0.4.2 (2020-10-12)
 

@@ -165,17 +165,28 @@ fn determine_dir() -> Vec<PathBuf> {
         .filter(|package| package.source.is_none())
         .map(|package| package.targets)
         .flatten()
-        .filter(|target| {
-            // Ignore tests, examples, and benchmarks, but still document binaries
-
-            // See https://doc.rust-lang.org/cargo/reference/external-tools.html#compiler-messages
-            // and https://github.com/rust-lang/docs.rs/issues/503#issuecomment-562797599
-            // for the difference between `kind` and `crate_type`
-            !target.crate_types.contains(&"bin".into())
-                || target.kind.iter().all(|kind| kind == "bin")
-        })
+        .filter(has_docs)
         .map(|target| doc.join(target.name.replace('-', "_")))
         .collect()
+}
+
+fn has_docs(target: &cargo_metadata::Target) -> bool {
+    // Ignore tests, examples, and benchmarks, but still document binaries
+
+    // See https://doc.rust-lang.org/cargo/reference/external-tools.html#compiler-messages
+    // and https://github.com/rust-lang/docs.rs/issues/503#issuecomment-562797599
+    // for the difference between `kind` and `crate_type`
+
+    let mut kinds = target.kind.iter();
+    // By default, ignore binaries
+    if target.crate_types.contains(&"bin".into()) {
+        // But allow them if this is a literal bin, and not a test or example
+        kinds.all(|kind| kind == "bin")
+    } else {
+        // We also have to consider examples and tests that are libraries
+        // (e.g. because of `cdylib`).
+        kinds.all(|kind| !["example", "test", "bench"].contains(&kind.as_str()))
+    }
 }
 
 /// Traverses a given path recursively, checking all *.html files found.
@@ -203,4 +214,41 @@ fn walk_dir(dir_path: &Path, args: &MainArgs) -> bool {
             // ||||||
             .reduce(|| false, |initial, new| initial || new)
     })
+}
+
+#[cfg(test)]
+mod test {
+    use super::has_docs;
+    use cargo_metadata::Target;
+
+    fn target(crate_types: &str, kind: &str) -> Target {
+        serde_json::from_str(&format!(
+            r#"{{
+            "crate_types": ["{}"],
+            "kind": ["{}"],
+            "name": "simple",
+            "src_path": "",
+            "edition": "2018",
+            "doctest": false,
+            "test": false
+        }}"#,
+            crate_types, kind
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn finds_right_docs() {
+        assert!(!has_docs(&target("cdylib", "example")));
+        assert!(!has_docs(&target("bin", "example")));
+        assert!(!has_docs(&target("bin", "test")));
+        assert!(!has_docs(&target("bin", "bench")));
+        assert!(!has_docs(&target("bin", "custom-build")));
+
+        assert!(has_docs(&target("bin", "bin")));
+        assert!(has_docs(&target("dylib", "dylib")));
+        assert!(has_docs(&target("rlib", "rlib")));
+        assert!(has_docs(&target("lib", "lib")));
+        assert!(has_docs(&target("proc-macro", "proc-macro")));
+    }
 }
