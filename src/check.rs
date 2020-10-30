@@ -1,6 +1,7 @@
 //! Provides functionality for checking the availablility of URLs.
 use std::{fmt, path::PathBuf};
 
+use log::debug;
 use reqwest::{self, StatusCode};
 use url::Url;
 

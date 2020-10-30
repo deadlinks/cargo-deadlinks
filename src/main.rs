@@ -1,21 +1,5 @@
-extern crate docopt;
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde_derive;
-
-extern crate html5ever;
-extern crate url;
-
-extern crate cargo_metadata;
-extern crate num_cpus;
-extern crate rayon;
-extern crate reqwest;
-extern crate serde_json;
-
-extern crate cargo_deadlinks;
+use log::error;
+use serde_derive::Deserialize;
 
 use std::path::{Path, PathBuf};
 use std::process;
