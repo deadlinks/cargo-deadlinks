@@ -1,15 +1,13 @@
-use serde_derive::Deserialize;
-
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process;
 
 use cargo_metadata::MetadataCommand;
 use docopt::Docopt;
-use log::LevelFilter;
+use serde_derive::Deserialize;
 
-use rayon::{prelude::*, ThreadPoolBuilder};
+use cargo_deadlinks::{walk_dir, CheckContext};
 
-use cargo_deadlinks::{unavailable_urls, CheckContext};
+mod shared;
 
 const MAIN_USAGE: &str = "
 Check your package's documentation for dead links.
@@ -34,10 +32,11 @@ struct MainArgs {
     flag_check_http: bool,
 }
 
-impl Into<CheckContext> for MainArgs {
-    fn into(self) -> CheckContext {
+impl From<MainArgs> for CheckContext {
+    fn from(args: MainArgs) -> CheckContext {
         CheckContext {
-            check_http: self.flag_check_http,
+            check_http: args.flag_check_http,
+            verbose: args.flag_debug,
         }
     }
 }
@@ -50,13 +49,14 @@ fn main() {
         })
         .unwrap_or_else(|e| e.exit());
 
-    init_logger(&args);
+    shared::init_logger(args.flag_debug, args.flag_verbose, "cargo_deadlinks");
 
     let dirs = args
         .arg_directory
         .as_ref()
         .map_or_else(determine_dir, |dir| vec![dir.into()]);
 
+    let ctx = CheckContext::from(args);
     let mut errors = false;
     for dir in dirs {
         let dir = match dir.canonicalize() {
@@ -69,28 +69,13 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        if walk_dir(&dir, &args) {
+        if walk_dir(&dir, ctx.clone()) {
             errors = true;
         }
     }
     if errors {
         process::exit(1);
     }
-}
-
-/// Initalizes the logger according to the provided config flags.
-fn init_logger(args: &MainArgs) {
-    let mut builder = env_logger::Builder::new();
-    match (args.flag_debug, args.flag_verbose) {
-        (true, _) => {
-            builder.filter(Some("cargo_deadlinks"), LevelFilter::Debug);
-        }
-        (false, true) => {
-            builder.filter(Some("cargo_deadlinks"), LevelFilter::Info);
-        }
-        _ => {}
-    }
-    builder.parse_default_env().init();
 }
 
 /// Returns the directory to use as root of the documentation.
@@ -141,33 +126,6 @@ fn has_docs(target: &cargo_metadata::Target) -> bool {
         // (e.g. because of `cdylib`).
         kinds.all(|kind| !["example", "test", "bench"].contains(&kind.as_str()))
     }
-}
-
-/// Traverses a given path recursively, checking all *.html files found.
-///
-/// Returns whether an error occurred.
-fn walk_dir(dir_path: &Path, args: &MainArgs) -> bool {
-    let pool = ThreadPoolBuilder::new()
-        .num_threads(num_cpus::get())
-        .build()
-        .unwrap();
-
-    let ctx = CheckContext {
-        check_http: args.flag_check_http,
-    };
-    pool.install(|| {
-        unavailable_urls(dir_path, &ctx)
-            .map(|err| {
-                if args.flag_debug {
-                    println!("{}", err);
-                } else {
-                    println!("{}", err.print_shortened(Some(dir_path)));
-                }
-                true
-            })
-            // ||||||
-            .reduce(|| false, |initial, new| initial || new)
-    })
 }
 
 #[cfg(test)]
