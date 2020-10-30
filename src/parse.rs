@@ -4,6 +4,7 @@ use std::path::Path;
 use html5ever::parse_document;
 use html5ever::rcdom::{Handle, NodeData, RcDom};
 use html5ever::tendril::TendrilSink;
+use log::{debug, info};
 use url::Url;
 
 /// Parse the html file at the provided path and check the availablility of all links in it.

@@ -1,18 +1,3 @@
-extern crate docopt;
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-
-extern crate html5ever;
-extern crate url;
-
-extern crate cargo_metadata;
-extern crate num_cpus;
-extern crate rayon;
-extern crate reqwest;
-extern crate serde_json;
-extern crate walkdir;
-
 use std::{
     fmt,
     path::{Path, PathBuf},
