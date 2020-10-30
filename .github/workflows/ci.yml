@@ -47,6 +47,9 @@ jobs:
           command: sweep
           args: --stamp
 
+      - name: Check features
+        run: cargo check --no-default-features
+
       - name: Build
         run: cargo build
 

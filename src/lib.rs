@@ -3,13 +3,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use rayon::prelude::*;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use walkdir::{DirEntry, WalkDir};
 
 use check::is_available;
 use parse::parse_html_file;
 
-pub use check::{CheckError, HttpError};
+pub use check::CheckError;
+#[cfg(feature = "http-check")]
+pub use check::HttpError;
 
 mod check;
 mod parse;
@@ -42,6 +44,7 @@ impl FileError {
             use CheckError::*;
 
             match e {
+                #[cfg(feature = "http-check")]
                 Http(_) => ret.push_str(&format!("\n\t{}", e)),
                 File(epath) => {
                     let epath = epath.strip_prefix(&prefix).unwrap_or(&epath);

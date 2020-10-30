@@ -8,6 +8,10 @@ repository = "https://github.com/deadlinks/cargo-deadlinks"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 
+[features]
+default = ["http-check"]
+http-check = ["ureq"]
+
 [dependencies]
 cargo_metadata = "0.9"
 docopt = "1"
@@ -16,7 +20,7 @@ html5ever = "0.24"
 log = "0.4"
 num_cpus = "1.8"
 rayon = "1.0"
-ureq = { version = "1.5.2", features = ["tls"], default-features = false }
+ureq = { version = "1.5.2", features = ["tls"], default-features = false, optional = true }
 serde = "1.0"
 serde_derive = "1.0"
 url = "2"
