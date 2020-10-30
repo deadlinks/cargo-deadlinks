@@ -27,7 +27,9 @@
 #### Changes
 
 * Switch from `reqwest` to `ureq` for HTTP-checking, cutting down the number of dependencies by almost a third. [PR#95]
+* Switch from `html5ever` to `lol_html`, making the code much easier to modify. [PR#86]
 
+[PR#86]: https://github.com/deadlinks/cargo-deadlinks/pull/86
 [PR#95]: https://github.com/deadlinks/cargo-deadlinks/pull/95
 
 <a name="0.4.2"></a>
