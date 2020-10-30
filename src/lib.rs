@@ -4,6 +4,7 @@ use std::{
 };
 
 use rayon::prelude::*;
+use rayon::ThreadPoolBuilder;
 use walkdir::{DirEntry, WalkDir};
 
 use check::is_available;
@@ -14,9 +15,11 @@ pub use check::{CheckError, HttpError};
 mod check;
 mod parse;
 
-#[derive(Debug)]
+// NOTE: this could be Copy, but we intentionally choose not to guarantee that.
+#[derive(Clone, Debug)]
 pub struct CheckContext {
     pub check_http: bool,
+    pub verbose: bool,
 }
 
 #[derive(Debug)]
@@ -30,6 +33,31 @@ impl fmt::Display for FileError {
         write!(f, "{}", self.print_shortened(None))?;
         Ok(())
     }
+}
+
+/// Traverses a given path recursively, checking all *.html files found.
+///
+/// For each error that occurred, print an error message.
+/// Returns whether an error occurred.
+pub fn walk_dir(dir_path: &Path, ctx: CheckContext) -> bool {
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(num_cpus::get())
+        .build()
+        .unwrap();
+
+    pool.install(|| {
+        unavailable_urls(dir_path, &ctx)
+            .map(|err| {
+                if ctx.verbose {
+                    println!("{}", err);
+                } else {
+                    println!("{}", err.print_shortened(Some(dir_path)));
+                }
+                true
+            })
+            // ||||||
+            .reduce(|| false, |initial, new| initial || new)
+    })
 }
 
 impl FileError {
