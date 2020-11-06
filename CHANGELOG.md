@@ -4,7 +4,9 @@
 
 #### Added
 
-* If URL is pointing to a directory check if index.html exist in that directory [PR#90]
+* If a URL points to a directory, check if index.html exists in that directory. [PR#90]
+
+[PR#90]: https://github.com/deadlinks/cargo-deadlinks/pull/90
 
 #### Fixes
 
