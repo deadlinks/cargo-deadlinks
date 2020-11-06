@@ -5,8 +5,10 @@
 #### Added
 
 * If a URL points to a directory, check if index.html exists in that directory. [PR#90]
+* Treat absolute paths as absolute with respect to the `base_url`, not with respect to the file system. [PR#91]
 
 [PR#90]: https://github.com/deadlinks/cargo-deadlinks/pull/90
+[PR#91]: https://github.com/deadlinks/cargo-deadlinks/pull/91
 
 #### Fixes
 
