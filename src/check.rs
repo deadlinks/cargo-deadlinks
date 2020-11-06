@@ -63,7 +63,7 @@ pub fn is_available(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 fn check_file_url(url: &Url, _ctx: &CheckContext) -> Result<(), CheckError> {
     let path = url.to_file_path().unwrap();
 
-    if path.exists() {
+    if path.is_file() || path.join("index.html").is_file() {
         debug!("Linked file at path {} does exist.", path.display());
         Ok(())
     } else {
@@ -105,5 +105,29 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
             }
         }
         Err(e) => Err(CheckError::Http(HttpError::Fetch(url.clone(), e))),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{check_file_url, CheckContext};
+    use std::env;
+    use url::Url;
+
+    fn test_check_file_url(path: &str) {
+        let cwd = env::current_dir().unwrap();
+        let url = Url::from_file_path(cwd.join(path)).unwrap();
+
+        check_file_url(&url, &CheckContext { check_http: false }).unwrap();
+    }
+
+    #[test]
+    fn test_file_path() {
+        test_check_file_url("tests/html/index.html");
+    }
+
+    #[test]
+    fn test_directory_path() {
+        test_check_file_url("tests/html/");
     }
 }

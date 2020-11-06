@@ -2,6 +2,10 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* If URL is pointing to a directory check if index.html exist in that directory [PR#90]
+
 #### Fixes
 
 * No longer try to document examples that are dynamic libraries
