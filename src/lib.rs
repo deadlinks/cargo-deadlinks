@@ -72,7 +72,7 @@ pub fn unavailable_urls<'a>(
         .filter_map(|e| e.ok())
         .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
         .flat_map(move |entry| {
-            let urls = parse_html_file(entry.path());
+            let urls = parse_html_file(dir_path, entry.path());
             let errors = urls
                 .into_iter()
                 .filter_map(|url| match is_available(&url, &ctx) {
