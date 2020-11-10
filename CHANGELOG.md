@@ -20,6 +20,10 @@
   library. deadlinks will now ignore tests and examples even if they are not
   binaries.
 
+* No longer download dependencies from crates.io when calculating targets
+
+  Previously, `cargo metadata` would download all dependencies even though they weren't used.
+
 #### Changes
 
 * Switch from `reqwest` to `ureq` for HTTP-checking, cutting down the number of dependencies by almost a third. [PR#95]

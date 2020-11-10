@@ -4,7 +4,7 @@ use serde_derive::Deserialize;
 use std::path::{Path, PathBuf};
 use std::process;
 
-use cargo_metadata::Metadata;
+use cargo_metadata::MetadataCommand;
 use docopt::Docopt;
 use log::LevelFilter;
 
@@ -79,34 +79,6 @@ fn main() {
     }
 }
 
-pub fn metadata_run(additional_args: Option<String>) -> Result<Metadata, ()> {
-    let cargo = std::env::var("CARGO").unwrap_or_else(|_| String::from("cargo"));
-    let mut cmd = std::process::Command::new(cargo);
-    cmd.arg("metadata");
-    cmd.args(&["--format-version", "1"]);
-    if let Some(additional_args) = additional_args {
-        cmd.arg(&additional_args);
-    }
-
-    let fail_msg = "failed to run `cargo metadata` - do you have cargo installed?";
-    let output = cmd
-        .stdout(process::Stdio::piped())
-        .spawn()
-        .expect(fail_msg)
-        .wait_with_output()
-        .expect(fail_msg);
-
-    if !output.status.success() {
-        // don't need more info because we didn't capture stderr;
-        // hopefully `cargo metadata` gave a useful error, but if not we can't do
-        // anything
-        return Err(());
-    }
-
-    let stdout = std::str::from_utf8(&output.stdout).expect("invalid UTF8");
-    Ok(serde_json::from_str(stdout).expect("invalid JSON"))
-}
-
 /// Initalizes the logger according to the provided config flags.
 fn init_logger(args: &MainArgs) {
     use std::io::Write;
@@ -135,10 +107,14 @@ fn init_logger(args: &MainArgs) {
 ///
 /// All *.html files under the root directory will be checked.
 fn determine_dir() -> Vec<PathBuf> {
-    let manifest = metadata_run(None).unwrap_or_else(|()| {
-        error!("help: if this is not a cargo directory, use `--dir`");
-        ::std::process::exit(1);
-    });
+    let manifest = MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .unwrap_or_else(|err| {
+            error!("error: {}", err);
+            error!("help: if this is not a cargo directory, use `--dir`");
+            ::std::process::exit(1);
+        });
     let doc = manifest.target_directory.join("doc");
 
     // originally written with this impressively bad jq query:
