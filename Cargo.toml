@@ -22,6 +22,7 @@ cargo = ["cargo_metadata", "serde_json"]
 default = ["cargo"]
 
 [dependencies]
+cached = { version = "0.20.0", default-features = false }
 cargo_metadata = { version = "0.9", optional = true }
 serde_json = { version = "1.0.34", optional = true }
 docopt = "1"
@@ -29,7 +30,9 @@ env_logger = "0.8"
 lol_html = "0.2"
 log = "0.4"
 num_cpus = "1.8"
+once_cell = "1.5.1"
 rayon = "1.0"
+regex = { version = "1", default-features = false, features = ["std", "perf"] }
 ureq = { version = "1.5.2", features = ["tls"], default-features = false }
 serde = "1.0"
 serde_derive = "1.0"
@@ -39,3 +42,4 @@ walkdir = "2.1"
 [dev-dependencies]
 assert_cmd = "1.0"
 predicates = "1.0.0"
+mockito = "0.28.0"

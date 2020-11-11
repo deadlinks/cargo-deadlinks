@@ -27,9 +27,11 @@
 
 * If a URL points to a directory, check if index.html exists in that directory. [PR#90]
 * Treat absolute paths as absolute with respect to the `base_url`, not with respect to the file system. [PR#91]
+* Check link fragments, with special handling for Rustdoc ranged fragments to highlight source code lines [PR#94]
 
 [PR#90]: https://github.com/deadlinks/cargo-deadlinks/pull/90
 [PR#91]: https://github.com/deadlinks/cargo-deadlinks/pull/91
+[PR#94]: https://github.com/deadlinks/cargo-deadlinks/pull/94
 
 #### Fixes
 
