@@ -51,9 +51,28 @@ fn parse_a_hrefs(html: &str, root_url: Url, base_url: Url) -> HashSet<Url> {
     urls
 }
 
+/// Parses the given string as HTML and returns values of all element's id attributes
+pub(crate) fn parse_fragments(html: &str) -> HashSet<String> {
+    let mut fragments = HashSet::new();
+    lol_html::rewrite_str(
+        html,
+        RewriteStrSettings {
+            element_content_handlers: vec![element!("*[id]", |el| {
+                let id = el.get_attribute("id").unwrap();
+                fragments.insert(id);
+                Ok(())
+            })],
+            ..RewriteStrSettings::default()
+        },
+    )
+    .expect("html rewriting failed");
+
+    fragments
+}
+
 #[cfg(test)]
 mod test {
-    use super::parse_a_hrefs;
+    use super::{parse_a_hrefs, parse_fragments};
     use url::Url;
 
     #[test]
@@ -98,5 +117,22 @@ mod test {
         assert!(urls.contains(&Url::from_file_path("/root/base/a.html").unwrap()));
         assert!(urls.contains(&Url::from_file_path("/root/b/c.html").unwrap()));
         assert!(urls.contains(&Url::from_file_path("/root/d.html").unwrap()));
+    }
+
+    #[test]
+    fn test_parse_fragments() {
+        let html = r#"
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <a id="a">a</a>
+                <h1 id="h1">h1</h1>
+            </body>
+        </html>"#;
+
+        let fragments = parse_fragments(html);
+
+        assert!(fragments.contains("a"));
+        assert!(fragments.contains("h1"));
     }
 }
