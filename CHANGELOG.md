@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.5.0"></a>
+## 0.5.0 (2020-11-13)
+
 #### Added
 
 * If a URL points to a directory, check if index.html exists in that directory. [PR#90]
