@@ -8,6 +8,7 @@ repository = "https://github.com/deadlinks/cargo-deadlinks"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 autobins = false
+default-run = "deadlinks"
 
 [[bin]]
 name = "cargo-deadlinks"
