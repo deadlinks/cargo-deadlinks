@@ -7,6 +7,7 @@
 * `RUST_LOG` is now read, and controls logging. [PR#100]
 * There is now a separate `deadlinks` binary which doesn't depend on cargo in any way. [PR#87]
 * `CheckContext` now implements `Default`. [PR#101]
+* `cargo deadlinks` will now run `cargo doc` automatically. You can opt-out of this behavior with `--no-build`. [PR#102]
 
 #### Changes
 
@@ -18,6 +19,7 @@
 [PR#87]: https://github.com/deadlinks/cargo-deadlinks/pull/87
 [PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
 [PR#101]: https://github.com/deadlinks/cargo-deadlinks/pull/101
+[PR#102]: https://github.com/deadlinks/cargo-deadlinks/pull/102
 [PR#103]: https://github.com/deadlinks/cargo-deadlinks/pull/103
 
 <a name="0.5.0"></a>

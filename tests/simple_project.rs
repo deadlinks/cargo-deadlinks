@@ -64,23 +64,17 @@ mod simple_project {
 
     #[test]
     fn it_checks_okay_project_correctly() {
-        // cargo-deadlinks fails when docs have not been generated before
+        // cargo-deadlinks generates the documentation if it does not yet exist
         remove_all("./tests/simple_project/target");
 
         deadlinks()
             .current_dir("./tests/simple_project")
             .assert()
-            .failure()
-            .stdout(
-                contains("Could not find directory")
-                    .and(contains("target/doc/simple_project\"."))
-                    .and(contains(
-                        "Please run `cargo doc` before running `cargo deadlinks`.",
-                    )),
-            );
+            .success();
 
         assert_doc("./tests/simple_project", &[]).success();
 
+        // TODO: test that the docs aren't rebuilt
         remove_all("./tests/simple_project/target2");
         assert_doc("./tests/simple_project", &[("CARGO_TARGET_DIR", "target2")]).success();
 
@@ -99,8 +93,10 @@ mod simple_project {
             .unwrap();
 
         // without --debug, paths are shortened
-        deadlinks()
-            .current_dir("./tests/simple_project")
+        // NOTE: uses `deadlinks` to avoid rebuilding the docs
+        Command::cargo_bin("deadlinks")
+            .unwrap()
+            .arg("./tests/simple_project/target/doc/simple_project")
             .assert()
             .failure()
             .stdout(
@@ -109,9 +105,10 @@ mod simple_project {
             );
 
         // with --debug, paths are not shortened
-        deadlinks()
+        Command::cargo_bin("deadlinks")
+            .unwrap()
             .arg("--debug")
-            .current_dir("./tests/simple_project")
+            .arg("./tests/simple_project/target/doc/simple_project")
             .assert()
             .failure()
             .stdout(
