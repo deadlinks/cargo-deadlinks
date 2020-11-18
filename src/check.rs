@@ -120,14 +120,7 @@ mod test {
         let cwd = env::current_dir().unwrap();
         let url = Url::from_file_path(cwd.join(path)).unwrap();
 
-        check_file_url(
-            &url,
-            &CheckContext {
-                verbose: false,
-                check_http: false,
-            },
-        )
-        .unwrap();
+        check_file_url(&url, &CheckContext::default()).unwrap();
     }
 
     #[test]
