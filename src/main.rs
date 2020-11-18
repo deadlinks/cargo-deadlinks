@@ -1,4 +1,3 @@
-use log::error;
 use serde_derive::Deserialize;
 
 use std::path::{Path, PathBuf};
@@ -19,11 +18,11 @@ Usage:
     cargo deadlinks [--dir <directory>] [options]
 
 Options:
-    -h --help               Print this message
-    --dir                   Specify a directory to check (default is target/doc/<package>)
-    --check-http            Check 'http' and 'https' scheme links
-    --debug                 Use debug output
-    -v --verbose            Use verbose output
+    -h --help               Print this message.
+    --dir                   Specify a directory to check (default is target/doc/<package>).
+    --check-http            Check 'http' and 'https' scheme links.
+    --debug                 Use debug output. This option is deprecated; use `RUST_LOG=debug` instead.
+    -v --verbose            Use verbose output. This option is deprecated; use `RUST_LOG==info` instead.
     -V --version            Print version info and exit.
 ";
 
@@ -81,10 +80,7 @@ fn main() {
 
 /// Initalizes the logger according to the provided config flags.
 fn init_logger(args: &MainArgs) {
-    use std::io::Write;
-
     let mut builder = env_logger::Builder::new();
-    builder.format(|f, record| writeln!(f, "{}", record.args()));
     match (args.flag_debug, args.flag_verbose) {
         (true, _) => {
             builder.filter(Some("cargo_deadlinks"), LevelFilter::Debug);
@@ -92,11 +88,9 @@ fn init_logger(args: &MainArgs) {
         (false, true) => {
             builder.filter(Some("cargo_deadlinks"), LevelFilter::Info);
         }
-        (false, false) => {
-            builder.filter(Some("cargo_deadlinks"), LevelFilter::Error);
-        }
+        _ => {}
     }
-    builder.init();
+    builder.parse_default_env().init();
 }
 
 /// Returns the directory to use as root of the documentation.
@@ -111,8 +105,8 @@ fn determine_dir() -> Vec<PathBuf> {
         .no_deps()
         .exec()
         .unwrap_or_else(|err| {
-            error!("error: {}", err);
-            error!("help: if this is not a cargo directory, use `--dir`");
+            println!("error: {}", err);
+            println!("help: if this is not a cargo directory, use `--dir`");
             ::std::process::exit(1);
         });
     let doc = manifest.target_directory.join("doc");
@@ -165,9 +159,9 @@ fn walk_dir(dir_path: &Path, args: &MainArgs) -> bool {
         unavailable_urls(dir_path, &ctx)
             .map(|err| {
                 if args.flag_debug {
-                    error!("{}", err);
+                    println!("{}", err);
                 } else {
-                    error!("{}", err.print_shortened(Some(dir_path)));
+                    println!("{}", err.print_shortened(Some(dir_path)));
                 }
                 true
             })
