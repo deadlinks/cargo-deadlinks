@@ -13,10 +13,12 @@
 * Errors are now printed to stdout, not stderr. [PR#100]
 * Logging now follows the standard `env_logger` format. [PR#100]
 * `--debug` and `--verbose` are deprecated in favor of `RUST_LOG`. [PR#100]
+* Published Linux binaries are now built against musl libc, not glibc. This allows running deadlinks in an alpine docker container. [PR#103]
 
 [PR#87]: https://github.com/deadlinks/cargo-deadlinks/pull/87
 [PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
 [PR#101]: https://github.com/deadlinks/cargo-deadlinks/pull/101
+[PR#103]: https://github.com/deadlinks/cargo-deadlinks/pull/103
 
 <a name="0.5.0"></a>
 ## 0.5.0 (2020-11-13)
