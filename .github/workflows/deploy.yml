@@ -16,16 +16,16 @@ jobs:
         include:
           - name: linux
             os: ubuntu-latest
-            artifact_name: cargo-deadlinks
-            asset_name: deadlinks-linux
+            suffix: ""
+            asset_suffix: -linux
           - name: windows
             os: windows-latest
-            artifact_name: cargo-deadlinks.exe
-            asset_name: deadlinks-windows
+            suffix: .exe
+            asset_suffix: -windows
           - name: macos
             os: macos-latest
-            artifact_name: cargo-deadlinks
-            asset_name: deadlinks-macos
+            suffix: ""
+            asset_suffix: -macos
 
     steps:
       - uses: actions/checkout@v1
@@ -38,10 +38,18 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: Upload binaries to release
+      - name: Upload `deadlinks` binaries
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
+          file: target/release/deadlinks${{ matrix.suffix }}
+          asset_name: deadlinks${{ matrix.asset_suffix }}
+          tag: ${{ github.ref }}
+
+      - name: Upload `cargo-deadlinks` binaries
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/cargo-deadlinks${{ matrix.suffix }}
+          asset_name: cargo-deadlinks${{ matrix.asset_suffix }}
           tag: ${{ github.ref }}
