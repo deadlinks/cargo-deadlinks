@@ -56,7 +56,7 @@ mod simple_project {
             .current_dir(env::temp_dir())
             .assert()
             .failure()
-            .stderr(
+            .stdout(
                 contains("help: if this is not a cargo directory, use `--dir`")
                     .and(contains("error: could not find `Cargo.toml`")),
             );
@@ -103,7 +103,7 @@ mod simple_project {
             .current_dir("./tests/simple_project")
             .assert()
             .failure()
-            .stderr(
+            .stdout(
                 contains("Linked file at path fn.bar.html does not exist!")
                     .and(contains("Found invalid urls in fn.foo.html:")),
             );
@@ -114,7 +114,7 @@ mod simple_project {
             .current_dir("./tests/simple_project")
             .assert()
             .failure()
-            .stderr(
+            .stdout(
                 contains(
                     "cargo-deadlinks/tests/simple_project/ta\
                   rget/doc/simple_project/fn.foo.html:",

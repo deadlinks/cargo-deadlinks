@@ -2,6 +2,18 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* `RUST_LOG` is now read, and controls logging. [PR#100]
+
+#### Changes
+
+* Errors are now printed to stdout, not stderr. [PR#100]
+* Logging now follows the standard `env_logger` format. [PR#100]
+* `--debug` and `--verbose` are deprecated in favor of `RUST_LOG`. [PR#100]
+
+[PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
+
 <a name="0.5.0"></a>
 ## 0.5.0 (2020-11-13)
 
