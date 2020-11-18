@@ -16,7 +16,7 @@ mod check;
 mod parse;
 
 // NOTE: this could be Copy, but we intentionally choose not to guarantee that.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct CheckContext {
     pub check_http: bool,
     pub verbose: bool,

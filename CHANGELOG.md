@@ -6,6 +6,7 @@
 
 * `RUST_LOG` is now read, and controls logging. [PR#100]
 * There is now a separate `deadlinks` binary which doesn't depend on cargo in any way. [PR#87]
+* `CheckContext` now implements `Default`. [PR#101]
 
 #### Changes
 
@@ -15,6 +16,7 @@
 
 [PR#87]: https://github.com/deadlinks/cargo-deadlinks/pull/87
 [PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
+[PR#101]: https://github.com/deadlinks/cargo-deadlinks/pull/101
 
 <a name="0.5.0"></a>
 ## 0.5.0 (2020-11-13)
