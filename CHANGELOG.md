@@ -5,6 +5,7 @@
 #### Added
 
 * `RUST_LOG` is now read, and controls logging. [PR#100]
+* There is now a separate `deadlinks` binary which doesn't depend on cargo in any way. [PR#87]
 
 #### Changes
 
@@ -12,6 +13,7 @@
 * Logging now follows the standard `env_logger` format. [PR#100]
 * `--debug` and `--verbose` are deprecated in favor of `RUST_LOG`. [PR#100]
 
+[PR#87]: https://github.com/deadlinks/cargo-deadlinks/pull/87
 [PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
 
 <a name="0.5.0"></a>
