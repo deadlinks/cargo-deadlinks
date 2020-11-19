@@ -50,6 +50,10 @@ deadlinks build/html
 
 For information about other arguments run `cargo deadlinks --help`.
 
+## Minimum Supported Rust Version (MSRV)
+
+The current MSRV is **1.45.0**. This may be increased in minor versions, but
+will never increase in a patch version.
 
 ## Contributing
 
