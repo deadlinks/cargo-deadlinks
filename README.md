@@ -9,6 +9,8 @@ This crate pairs well with [intra-doc links] and [`cargo-intraconv`], which
 make it easier to write links without having to know the exact HTML page
 rustdoc will generate.
 
+`deadlinks` can also be used on projects that aren't Rust crates.
+
 ## Installation
 
 Install cargo-deadlinks via:
@@ -26,6 +28,7 @@ Alternatively, install pre-built binaries from the [releases page].
 
 From your packages directory run:
 ```bash
+# this will automatically run `cargo doc` for you
 # any broken links will show up in the output
 cargo deadlinks
 # if you also want to check http and https links
@@ -38,6 +41,13 @@ your dependencies, you can provide the `--dir` argument:
 ```bash
 cargo deadlinks --dir target/doc
 ```
+
+To check a project that isn't a crate, use `deadlinks` instead:
+```bash
+# this requires that you already have a static site in build/html
+deadlinks build/html
+```
+
 For information about other arguments run `cargo deadlinks --help`.
 
 
