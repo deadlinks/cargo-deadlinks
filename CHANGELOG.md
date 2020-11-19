@@ -16,6 +16,11 @@
 * `--debug` and `--verbose` are deprecated in favor of `RUST_LOG`. [PR#100]
 * Published Linux binaries are now built against musl libc, not glibc. This allows running deadlinks in an alpine docker container. [PR#103]
 
+#### Fixes
+
+* `doc = false` is now taken into account when running `cargo deadlinks`. It will still be ignored when running with `--no-build`. [PR#102]
+* `CARGO_BUILD_TARGET` and other cargo configuration is now taken into account when running `cargo deadlinks`. It will still be ignored when running with `--no-build`. [PR#102]
+
 [PR#87]: https://github.com/deadlinks/cargo-deadlinks/pull/87
 [PR#100]: https://github.com/deadlinks/cargo-deadlinks/pull/100
 [PR#101]: https://github.com/deadlinks/cargo-deadlinks/pull/101

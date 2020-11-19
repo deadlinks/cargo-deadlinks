@@ -56,7 +56,7 @@ mod simple_project {
             .current_dir(env::temp_dir())
             .assert()
             .failure()
-            .stdout(
+            .stderr(
                 contains("help: if this is not a cargo directory, use `--dir`")
                     .and(contains("error: could not find `Cargo.toml`")),
             );
@@ -79,12 +79,11 @@ mod simple_project {
         assert_doc("./tests/simple_project", &[("CARGO_TARGET_DIR", "target2")]).success();
 
         remove_all("./tests/simple_project/target");
-        // This currently breaks due to a cargo bug: https://github.com/rust-lang/cargo/issues/8791
         assert_doc(
             "./tests/simple_project",
             &[("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu")],
         )
-        .failure();
+        .success();
 
         // fn it_shortens_path_on_error
         remove_all("./tests/simple_project/target");
