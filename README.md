@@ -5,12 +5,22 @@ Check your `cargo doc` documentation for broken links!
 Useful if you just refactored the structure of your crate or want to ensure that
 your documentation is readable offline.
 
+This crate pairs well with [intra-doc links] and [`cargo-intraconv`], which
+make it easier to write links without having to know the exact HTML page
+rustdoc will generate.
+
 ## Installation
 
 Install cargo-deadlinks via:
 ```bash
 cargo install cargo-deadlinks
 ```
+
+Alternatively, install pre-built binaries from the [releases page].
+
+[intra-doc links]: https://doc.rust-lang.org/rustdoc/linking-to-items-by-name.html
+[`cargo-intraconv`]: https://github.com/poliorcetics/cargo-intraconv
+[releases page]: https://github.com/deadlinks/cargo-deadlinks/releases
 
 ## Usage
 
