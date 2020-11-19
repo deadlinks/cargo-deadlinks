@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.6.0"></a>
+## 0.6.0 (2020-11-19)
+
 #### Added
 
 * `RUST_LOG` is now read, and controls logging. [PR#100]
