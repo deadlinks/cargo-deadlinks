@@ -16,6 +16,7 @@ Usage:
 Options:
     -h --help               Print this message
     --check-http            Check 'http' and 'https' scheme links
+    --ignore-fragments      Don't check URL fragments.
     --debug                 Use debug output
     -v --verbose            Use verbose output
     -V --version            Print version info and exit.
@@ -27,6 +28,7 @@ struct MainArgs {
     flag_verbose: bool,
     flag_debug: bool,
     flag_check_http: bool,
+    flag_ignore_fragments: bool,
 }
 
 impl From<MainArgs> for CheckContext {
@@ -34,6 +36,7 @@ impl From<MainArgs> for CheckContext {
         CheckContext {
             check_http: args.flag_check_http,
             verbose: args.flag_debug,
+            check_fragments: !args.flag_ignore_fragments,
         }
     }
 }

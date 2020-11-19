@@ -16,10 +16,21 @@ mod check;
 mod parse;
 
 // NOTE: this could be Copy, but we intentionally choose not to guarantee that.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct CheckContext {
     pub check_http: bool,
     pub verbose: bool,
+    pub check_fragments: bool,
+}
+
+impl Default for CheckContext {
+    fn default() -> Self {
+        CheckContext {
+            check_http: false,
+            verbose: false,
+            check_fragments: true,
+        }
+    }
 }
 
 #[derive(Debug)]

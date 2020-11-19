@@ -2,6 +2,12 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+ * `--ignore-fragments` CLI parameter to disable URL fagment checking [PR#108]
+
+[PR#108]: https://github.com/deadlinks/cargo-deadlinks/pull/108
+
 <a name="0.6.0"></a>
 ## 0.6.0 (2020-11-19)
 

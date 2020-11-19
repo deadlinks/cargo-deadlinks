@@ -21,6 +21,7 @@ Options:
     -h --help               Print this message.
     --dir                   Specify a directory to check (default is target/doc/<package>).
     --check-http            Check 'http' and 'https' scheme links.
+    --ignore-fragments      Don't check URL fragments.
     --no-build              Do not call `cargo doc` before running link checking. By default, deadlinks will call `cargo doc` if `--dir` is not passed.
     --debug                 Use debug output. This option is deprecated; use `RUST_LOG=debug` instead.
     -v --verbose            Use verbose output. This option is deprecated; use `RUST_LOG==info` instead.
@@ -34,6 +35,7 @@ struct MainArgs {
     flag_debug: bool,
     flag_check_http: bool,
     flag_no_build: bool,
+    flag_ignore_fragments: bool,
 }
 
 impl From<&MainArgs> for CheckContext {
@@ -41,6 +43,7 @@ impl From<&MainArgs> for CheckContext {
         CheckContext {
             check_http: args.flag_check_http,
             verbose: args.flag_debug,
+            check_fragments: !args.flag_ignore_fragments,
         }
     }
 }

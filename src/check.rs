@@ -183,7 +183,7 @@ fn is_fragment_available(
 }
 
 /// Check a URL with the "file" scheme for availability. Returns `false` if it is unavailable.
-fn check_file_url(url: &Url, _ctx: &CheckContext) -> Result<(), CheckError> {
+fn check_file_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     let path = url.to_file_path().unwrap();
 
     // determine the full path by looking if the path points to a directory,
@@ -199,6 +199,10 @@ fn check_file_url(url: &Url, _ctx: &CheckContext) -> Result<(), CheckError> {
         debug!("Linked file at path {} does not exist!", path.display());
         return Err(CheckError::File(path));
     };
+
+    if !ctx.check_fragments {
+        return Ok(());
+    }
 
     // The URL might contain a fragment. In that case we need a full GET
     // request to check if the fragment exists.
@@ -272,7 +276,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 
     // The URL might contain a fragment. In that case we need a full GET
     // request to check if the fragment exists.
-    if url.fragment().is_none() {
+    if url.fragment().is_none() || !ctx.check_fragments {
         let resp = ureq::head(url.as_str()).call();
 
         handle_response(url, resp).map(|_: ureq::Response| ())
@@ -325,6 +329,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: false,
+                check_fragments: true,
             },
         )
     }
@@ -386,6 +391,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: false,
+                check_fragments: true,
             },
         )
         .unwrap();
@@ -398,6 +404,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: false,
+                check_fragments: true,
             },
         )
         .unwrap();
@@ -410,6 +417,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: false,
+                check_fragments: true,
             },
         ) {
             Err(CheckError::File(path)) => assert!(path.ends_with("tests/html/missing_index")),
@@ -432,6 +440,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: true,
+                check_fragments: true,
             },
         )
         .unwrap();
@@ -460,6 +469,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: true,
+                check_fragments: true,
             },
         )
         .unwrap();
@@ -486,6 +496,7 @@ mod test {
             &CheckContext {
                 verbose: false,
                 check_http: true,
+                check_fragments: true,
             },
         ) {
             Err(CheckError::Fragment(Link::Http(url), fragment, None)) => {
@@ -500,6 +511,41 @@ mod test {
                 x
             ),
         }
+
+        root.assert();
+    }
+
+    #[test]
+    fn test_disabling_fragment_checks_file() {
+        check_file_url(
+            &url_for("tests/html/anchors.html#nonexistent"),
+            &CheckContext {
+                verbose: false,
+                check_http: false,
+                check_fragments: false,
+            },
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn test_disabling_fragment_checks_http() {
+        let root = mock("HEAD", "/test_disabling_fragment_checks_http")
+            .with_status(200)
+            .create();
+
+        let mut url = mockito::server_url();
+        url.push_str("/test_disabling_fragment_checks_http#missing");
+
+        is_available(
+            &Url::parse(&url).unwrap(),
+            &CheckContext {
+                verbose: false,
+                check_http: true,
+                check_fragments: false,
+            },
+        )
+        .unwrap();
 
         root.assert();
     }
