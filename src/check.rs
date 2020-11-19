@@ -306,7 +306,7 @@ mod test {
         let mut parts = path.split('#');
         let file_path = parts.next().unwrap();
 
-        let mut url = if file_path.ends_with("/") {
+        let mut url = if file_path.ends_with('/') {
             Url::from_directory_path(cwd.join(file_path))
         } else {
             Url::from_file_path(cwd.join(file_path))

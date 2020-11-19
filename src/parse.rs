@@ -28,9 +28,9 @@ fn parse_a_hrefs(html: &str, root_url: Url, base_url: Url) -> HashSet<Url> {
             element_content_handlers: vec![element!("a[href]", |el| {
                 let href = el.get_attribute("href").unwrap();
                 // base is the file path, unless path is absolute (starts with /)
-                let (base, href) = if href.starts_with('/') {
+                let (base, href) = if let Some(absolute) = href.strip_prefix('/') {
                     // Treat absolute paths as absolute with respect to the `root_url`, not with respect to the file system.
-                    (&root_url, &href[1..])
+                    (&root_url, absolute)
                 } else {
                     (&base_url, href.as_str())
                 };
