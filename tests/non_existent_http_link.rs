@@ -1,6 +1,7 @@
 extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
+use predicates::str::contains;
 use std::process::Command;
 
 mod non_existent_http_link {
@@ -40,6 +41,9 @@ mod non_existent_http_link {
             .args(&["deadlinks", "--check-http"])
             .current_dir("./tests/non_existent_http_link")
             .assert()
-            .failure();
+            .failure()
+            .stdout(contains(
+                "Unexpected HTTP status fetching http://example.com/this/does/not/exist: Not Found",
+            ));
     }
 }

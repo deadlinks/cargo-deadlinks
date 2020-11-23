@@ -23,21 +23,21 @@ const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
 #[derive(Debug)]
 pub enum IoError {
-    HttpUnexpectedStatus(Url, ureq::Response),
-    HttpFetch(Url, ureq::Error),
+    HttpUnexpectedStatus(ureq::Response),
+    HttpFetch(ureq::Transport),
     FileIo(String, std::io::Error),
 }
 
 impl fmt::Display for IoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            IoError::HttpUnexpectedStatus(url, resp) => write!(
+            IoError::HttpUnexpectedStatus(resp) => write!(
                 f,
                 "Unexpected HTTP status fetching {}: {}",
-                url,
+                resp.get_url(),
                 resp.status_text()
             ),
-            IoError::HttpFetch(url, e) => write!(f, "Error fetching {}: {}", url, e),
+            IoError::HttpFetch(e) => write!(f, "Error fetching {}", e),
             IoError::FileIo(url, e) => write!(f, "Error fetching {}: {}", url, e),
         }
     }
@@ -87,6 +87,16 @@ pub enum CheckError {
     Fragment(Link, String, Option<Vec<String>>),
     /// An error occured while trying to find whether the file or URL existed
     Io(Box<IoError>),
+}
+
+impl From<ureq::Error> for CheckError {
+    fn from(err: ureq::Error) -> Self {
+        let io_err = match err {
+            ureq::Error::Status(_, response) => IoError::HttpUnexpectedStatus(response),
+            ureq::Error::Transport(err) => IoError::HttpFetch(err),
+        };
+        CheckError::Io(Box::new(io_err))
+    }
 }
 
 impl fmt::Display for CheckError {
@@ -277,23 +287,7 @@ fn check_file_fragment(
     is_fragment_available(&Link::File(path.to_path_buf()), fragment, fetch_html)
 }
 
-fn handle_response(url: &Url, resp: ureq::Response) -> Result<ureq::Response, CheckError> {
-    if resp.synthetic() {
-        Err(CheckError::Io(Box::new(IoError::HttpFetch(
-            url.clone(),
-            resp.into_synthetic_error().unwrap(),
-        ))))
-    } else if resp.ok() {
-        Ok(resp)
-    } else {
-        Err(CheckError::Io(Box::new(IoError::HttpUnexpectedStatus(
-            url.clone(),
-            resp,
-        ))))
-    }
-}
-
-/// Check a URL with "http" or "https" scheme for availability. Returns `false` if it is unavailable.
+/// Check a URL with "http" or "https" scheme for availability. Returns `Err` if it is unavailable.
 fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     if ctx.check_http == HttpCheck::Ignored {
         warn!(
@@ -320,13 +314,15 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     // The URL might contain a fragment. In that case we need a full GET
     // request to check if the fragment exists.
     if url.fragment().is_none() || !ctx.check_fragments {
-        let mut resp = ureq::head(url.as_str()).call();
-        // If HEAD isn't allowed, try sending a GET instead
-        if resp.status() == 405 {
-            resp = ureq::get(url.as_str()).call();
+        match ureq::head(url.as_str()).call() {
+            Err(ureq::Error::Status(405, _)) => {
+                // If HEAD isn't allowed, try sending a GET instead
+                ureq::get(url.as_str()).call()?;
+                Ok(())
+            }
+            Err(other) => Err(other.into()),
+            Ok(_) => Ok(()),
         }
-
-        handle_response(url, resp).map(|_: ureq::Response| ())
     } else {
         // the URL might contain a fragment, in that case we need to check if
         // the fragment exists, this issues a GET request
@@ -338,8 +334,8 @@ fn check_http_fragment(url: &Url, fragment: &str) -> Result<(), CheckError> {
     debug!("Checking fragment {} of URL {}.", fragment, url.as_str());
 
     fn get_html(url: &Url) -> Result<String, CheckError> {
-        let resp = ureq::get(url.as_str()).call();
-        handle_response(&url, resp).map(|resp| resp.into_string().unwrap())
+        let resp = ureq::get(url.as_str()).call()?;
+        Ok(resp.into_string().unwrap())
     }
 
     let fetch_html = || {
@@ -359,7 +355,8 @@ fn check_http_fragment(url: &Url, fragment: &str) -> Result<(), CheckError> {
         }
     };
 
-    is_fragment_available(&Link::Http(url.clone()), fragment, fetch_html)
+    is_fragment_available(&Link::Http(url.clone()), fragment, fetch_html)?;
+    Ok(())
 }
 
 #[cfg(test)]
