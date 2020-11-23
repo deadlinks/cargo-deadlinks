@@ -11,7 +11,9 @@
 
 * `CheckError` now has an `HttpForbidden` variant. [PR#138]
 * The `check_http` field of `CheckContext` is now an enum instead of a boolean [PR#138]
+* ureq has been upgraded to 2.0. This affects the public `CheckError` API, but should otherwise have no user-facing impact. [PR#134]
 
+[PR#134]: https://github.com/deadlinks/cargo-deadlinks/pull/134
 [PR#138]: https://github.com/deadlinks/cargo-deadlinks/pull/138
 
 <a name="0.7.2"></a>
