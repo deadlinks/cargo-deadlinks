@@ -2,11 +2,19 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.6.1"></a>
+## 0.6.1 (2020-11-23)
+
 #### Added
 
- * `--ignore-fragments` CLI parameter to disable URL fagment checking [PR#108]
+* `--ignore-fragments` CLI parameter to disable URL fagment checking. [PR#108]
+
+#### Fixed
+
+* Empty fragments are no longer treated as broken links. This allows using `deadlinks` with unsafe functions, which have a generated fragment URL from rustdoc. [PR#109]
 
 [PR#108]: https://github.com/deadlinks/cargo-deadlinks/pull/108
+[PR#109]: https://github.com/deadlinks/cargo-deadlinks/pull/109
 
 <a name="0.6.0"></a>
 ## 0.6.0 (2020-11-19)
