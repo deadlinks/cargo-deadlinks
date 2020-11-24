@@ -1,6 +1,7 @@
 extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
+use predicates::prelude::PredicateBooleanExt;
 use predicates::str::contains;
 use std::process::Command;
 
@@ -12,7 +13,10 @@ fn reports_broken_links() {
         .current_dir("./tests/broken_links")
         .assert()
         .failure()
-        .stdout(contains(
-            "Linked file at path fn.not_here.html does not exist",
-        ));
+        // make sure warnings are emitted
+        .stderr(contains("unresolved link"))
+        .stdout(
+            contains("Linked file at path fn.not_here.html does not exist")
+                .and(contains("Linked file at path links does not exist!")),
+        );
 }

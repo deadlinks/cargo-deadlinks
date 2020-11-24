@@ -2,6 +2,12 @@
 
 ## NEXT (UNRELEASED)
 
+#### Fixed
+
+* Warnings from cargo are no longer silenced when documenting. [PR#114]
+
+[PR#114]: https://github.com/deadlinks/cargo-deadlinks/pull/114
+
 <a name="0.6.1"></a>
 ## 0.6.1 (2020-11-23)
 

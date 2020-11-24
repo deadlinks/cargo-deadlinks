@@ -137,7 +137,12 @@ fn determine_dir(no_build: bool) -> Vec<PathBuf> {
     });
     // Stolen from https://docs.rs/cargo_metadata/0.12.0/cargo_metadata/#examples
     let mut cargo_process = Command::new(cargo)
-        .args(&["doc", "--no-deps", "--message-format", "json"])
+        .args(&[
+            "doc",
+            "--no-deps",
+            "--message-format",
+            "json-render-diagnostics",
+        ])
         .stdout(process::Stdio::piped())
         // spawn instead of output() allows running deadlinks and cargo in parallel;
         // this is helpful when you have many dependencies that take a while to document
