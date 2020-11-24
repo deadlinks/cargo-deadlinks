@@ -1,10 +1,10 @@
 use std::env;
+use std::ffi::OsString;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::process::{self, Command};
 
 use cargo_metadata::{Message, MetadataCommand};
-use docopt::Docopt;
 use serde_derive::Deserialize;
 
 use cargo_deadlinks::{walk_dir, CheckContext};
@@ -15,7 +15,7 @@ const MAIN_USAGE: &str = "
 Check your package's documentation for dead links.
 
 Usage:
-    cargo deadlinks [--dir <directory>] [options]
+    cargo deadlinks [--dir <directory>] [options] [-- <CARGO_ARGS>]
 
 Options:
     -h --help               Print this message.
@@ -36,6 +36,7 @@ struct MainArgs {
     flag_check_http: bool,
     flag_no_build: bool,
     flag_ignore_fragments: bool,
+    cargo_args: Vec<OsString>,
 }
 
 impl From<&MainArgs> for CheckContext {
@@ -48,20 +49,62 @@ impl From<&MainArgs> for CheckContext {
     }
 }
 
+fn parse_args() -> Result<MainArgs, pico_args::Error> {
+    use pico_args::*;
+
+    let mut args: Vec<_> = std::env::args_os().collect();
+    args.remove(0);
+    if args.get(0).map_or(true, |arg| arg != "deadlinks") {
+        return Err(Error::ArgumentParsingFailed {
+            cause: "cargo-deadlinks should be run as `cargo deadlinks`".into(),
+        });
+    }
+    args.remove(0);
+
+    let cargo_args = if let Some(dash_dash) = args.iter().position(|arg| arg == "--") {
+        let c = args.drain(dash_dash + 1..).collect();
+        args.pop();
+        c
+    } else {
+        Vec::new()
+    };
+
+    let mut args = Arguments::from_vec(args);
+    if args.contains(["-V", "--version"]) {
+        println!(concat!("cargo-deadlinks ", env!("CARGO_PKG_VERSION")));
+        std::process::exit(0);
+    } else if args.contains(["-h", "--help"]) {
+        println!("{}", MAIN_USAGE);
+        std::process::exit(0);
+    }
+    let main_args = MainArgs {
+        arg_directory: args.opt_value_from_str("--dir")?,
+        flag_verbose: args.contains(["-v", "--verbose"]),
+        flag_debug: args.contains("--debug"),
+        flag_no_build: args.contains("--no-build"),
+        flag_ignore_fragments: args.contains("--ignore-fragments"),
+        flag_check_http: args.contains("--check-http"),
+        cargo_args,
+    };
+    args.finish()?;
+    Ok(main_args)
+}
+
 fn main() {
-    let args: MainArgs = Docopt::new(MAIN_USAGE)
-        .and_then(|d| {
-            d.version(Some(env!("CARGO_PKG_VERSION").to_owned()))
-                .deserialize()
-        })
-        .unwrap_or_else(|e| e.exit());
+    let args: MainArgs = match parse_args() {
+        Ok(args) => args,
+        Err(err) => {
+            println!("error: {}", err);
+            std::process::exit(1)
+        }
+    };
 
     shared::init_logger(args.flag_debug, args.flag_verbose, "cargo_deadlinks");
 
-    let dirs = args
-        .arg_directory
-        .as_ref()
-        .map_or_else(|| determine_dir(args.flag_no_build), |dir| vec![dir.into()]);
+    let dirs = args.arg_directory.as_ref().map_or_else(
+        || determine_dir(args.flag_no_build, &args.cargo_args),
+        |dir| vec![dir.into()],
+    );
 
     let ctx = CheckContext::from(&args);
     let mut errors = false;
@@ -103,7 +146,7 @@ fn main() {
 /// Otherwise, build the documentation and have cargo itself tell us where it is.
 ///
 /// All *.html files under the root directory will be checked.
-fn determine_dir(no_build: bool) -> Vec<PathBuf> {
+fn determine_dir(no_build: bool, cargo_args: &[OsString]) -> Vec<PathBuf> {
     if no_build {
         eprintln!("warning: --no-build ignores `doc = false` and may have other bugs");
         let manifest = MetadataCommand::new()
@@ -143,6 +186,7 @@ fn determine_dir(no_build: bool) -> Vec<PathBuf> {
             "--message-format",
             "json-render-diagnostics",
         ])
+        .args(cargo_args)
         .stdout(process::Stdio::piped())
         // spawn instead of output() allows running deadlinks and cargo in parallel;
         // this is helpful when you have many dependencies that take a while to document
