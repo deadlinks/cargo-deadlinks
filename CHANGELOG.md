@@ -2,12 +2,24 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* `cargo-deadlinks` now allows passing arguments to `cargo doc`, using `cargo deadlinks -- <CARGO_ARGS>`. [PR#116]
+* `deadlinks` now allows specifying multiple directories to check. [PR#116]
+
 #### Fixed
 
 * Warnings from cargo are no longer silenced when documenting. [PR#114]
 * `cargo deadlinks` no longer ignores all directories on Windows. [PR#121]
 
+#### Changes
+
+* Argument parsing now uses `pico-args`, not `docopt`. [PR#116]
+* Running `cargo-deadlinks` (not `cargo deadlinks`) now gives a better error message. [PR#116]
+* Both binaries now print the name of the binary when passed `--version`. [PR#116]
+
 [PR#114]: https://github.com/deadlinks/cargo-deadlinks/pull/114
+[PR#116]: https://github.com/deadlinks/cargo-deadlinks/pull/116
 [PR#121]: https://github.com/deadlinks/cargo-deadlinks/pull/121
 
 <a name="0.6.1"></a>
