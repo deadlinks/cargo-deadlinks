@@ -50,14 +50,14 @@ impl fmt::Display for FileError {
 ///
 /// For each error that occurred, print an error message.
 /// Returns whether an error occurred.
-pub fn walk_dir(dir_path: &Path, ctx: CheckContext) -> bool {
+pub fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
         .unwrap();
 
     pool.install(|| {
-        unavailable_urls(dir_path, &ctx)
+        unavailable_urls(dir_path, ctx)
             .map(|err| {
                 if ctx.verbose {
                     println!("{}", err);

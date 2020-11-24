@@ -127,7 +127,7 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        if walk_dir(&dir, ctx.clone()) {
+        if walk_dir(&dir, &ctx) {
             errors = true;
         }
     }

@@ -83,7 +83,7 @@ fn main() {
             }
         };
         log::info!("checking directory {:?}", dir);
-        errors |= walk_dir(&dir, ctx.clone());
+        errors |= walk_dir(&dir, &ctx);
     }
     if errors {
         process::exit(1);
