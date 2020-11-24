@@ -66,6 +66,10 @@ fn main() {
             process::exit(1);
         }
     };
+    if args.arg_directory.is_empty() {
+        eprintln!("error: missing <directory> argument");
+        process::exit(1);
+    }
     shared::init_logger(args.flag_debug, args.flag_verbose, "deadlinks");
 
     let mut errors = false;
