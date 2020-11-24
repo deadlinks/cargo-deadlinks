@@ -2,6 +2,12 @@
 
 ## NEXT (UNRELEASED)
 
+#### Changed
+
+* `walk_dir` now takes `&CheckContext`, not `CheckContext`. [PR#118]
+
+[PR#118]: https://github.com/deadlinks/cargo-deadlinks/pull/118
+
 <a name="0.6.2"></a>
 ## 0.6.2 (2020-11-27)
 
