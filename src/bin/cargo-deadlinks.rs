@@ -49,7 +49,7 @@ impl From<&MainArgs> for CheckContext {
     }
 }
 
-fn parse_args() -> Result<MainArgs, pico_args::Error> {
+fn parse_args() -> Result<MainArgs, shared::PicoError> {
     use pico_args::*;
 
     let mut args: Vec<_> = std::env::args_os().collect();
@@ -57,7 +57,8 @@ fn parse_args() -> Result<MainArgs, pico_args::Error> {
     if args.get(0).map_or(true, |arg| arg != "deadlinks") {
         return Err(Error::ArgumentParsingFailed {
             cause: "cargo-deadlinks should be run as `cargo deadlinks`".into(),
-        });
+        }
+        .into());
     }
     args.remove(0);
 
