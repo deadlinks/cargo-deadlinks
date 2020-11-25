@@ -40,7 +40,7 @@ impl From<&MainArgs> for CheckContext {
     }
 }
 
-fn parse_args() -> Result<MainArgs, pico_args::Error> {
+fn parse_args() -> Result<MainArgs, shared::PicoError> {
     let mut args = pico_args::Arguments::from_env();
     if args.contains(["-V", "--version"]) {
         println!(concat!("deadlinks ", env!("CARGO_PKG_VERSION")));
