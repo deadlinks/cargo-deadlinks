@@ -157,14 +157,11 @@ fn determine_dir(no_build: bool) -> Vec<PathBuf> {
             _ => None,
         })
         .flatten()
-        .filter_map(|dir| {
-            dir.to_str()
-                .expect("non UTF-8 paths are not supported when building documentation with Cargo")
-                .strip_suffix("/index.html")
-                // needed in order to keep a streaming iterator
-                .map(|s| s.to_owned())
+        .filter(|path| path.file_name().and_then(|f| f.to_str()) == Some("index.html"))
+        .map(|mut path| {
+            path.pop();
+            path
         })
-        .map(|s| s.into())
         // TODO: run this in parallel, which should speed up builds a fair bit.
         // This will be hard because either cargo's progress bar will overlap with our output,
         // or we'll have to recreate the progress bar somehow.

@@ -5,8 +5,10 @@
 #### Fixed
 
 * Warnings from cargo are no longer silenced when documenting. [PR#114]
+* `cargo deadlinks` no longer ignores all directories on Windows. [PR#121]
 
 [PR#114]: https://github.com/deadlinks/cargo-deadlinks/pull/114
+[PR#121]: https://github.com/deadlinks/cargo-deadlinks/pull/121
 
 <a name="0.6.1"></a>
 ## 0.6.1 (2020-11-23)
