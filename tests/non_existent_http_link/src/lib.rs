@@ -1,6 +1,6 @@
 /// Foo function
 ///
-/// Has something to do with [some website](http://thiswebsitedoesnotexist.xyz).
+/// Has something to do with [some website](http://example.com/this/does/not/exist).
 pub fn foo() {}
 
 /// Bar function
