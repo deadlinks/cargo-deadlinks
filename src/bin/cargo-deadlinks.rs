@@ -95,7 +95,7 @@ fn main() {
     let args: MainArgs = match parse_args() {
         Ok(args) => args,
         Err(err) => {
-            println!("error: {}", err);
+            eprintln!("error: {}", err);
             std::process::exit(1)
         }
     };
