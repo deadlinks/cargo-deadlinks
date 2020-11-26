@@ -2,7 +2,7 @@ extern crate assert_cmd;
 extern crate predicates;
 
 use assert_cmd::prelude::*;
-use predicate::str::contains;
+use predicate::str::{contains, starts_with};
 use predicates::prelude::*;
 use std::env;
 use std::path::Path;
@@ -140,5 +140,71 @@ mod workspace {
     fn it_checks_workspaces() {
         remove_all("./tests/workspace/target");
         assert_doc("./tests/workspace", &[]).success();
+    }
+}
+
+mod cli_args {
+    use super::*;
+
+    #[test]
+    fn it_passes_arguments_through_to_cargo() {
+        remove_all("./tests/cli_args/target");
+        deadlinks()
+            .current_dir("./tests/cli_args")
+            .arg("--")
+            .arg("--document-private-items")
+            .assert()
+            .success();
+        assert!(Path::new("./tests/cli_args/target/doc/cli_args/struct.Private.html").exists());
+    }
+
+    #[test]
+    fn it_exits_with_success_on_info_queries() {
+        for arg in &["-h", "--help", "-V", "--version"] {
+            deadlinks().arg(arg).assert().success();
+        }
+    }
+
+    #[test]
+    fn dir_works() {
+        deadlinks()
+            .arg("--dir")
+            .arg("./tests/broken_links/hardcoded-target")
+            .assert()
+            .failure()
+            .stdout(contains("Found invalid urls"));
+    }
+
+    #[test]
+    fn missing_deadlinks_gives_helpful_error() {
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .assert()
+            .failure()
+            .stderr(contains("should be run as `cargo deadlinks`"));
+    }
+
+    #[test]
+    fn too_many_args_is_an_error() {
+        deadlinks()
+            .arg("x")
+            .assert()
+            .failure()
+            .stderr(contains("error:").and(contains("x")));
+    }
+
+    #[test]
+    fn version_contains_binary_name() {
+        Command::cargo_bin("deadlinks")
+            .unwrap()
+            .arg("--version")
+            .assert()
+            .stdout(starts_with("deadlinks "));
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .arg("deadlinks")
+            .arg("--version")
+            .assert()
+            .stdout(starts_with("cargo-deadlinks "));
     }
 }
