@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.6.2"></a>
+## 0.6.2 (2020-11-27)
+
 #### Added
 
 * `cargo-deadlinks` now allows passing arguments to `cargo doc`, using `cargo deadlinks -- <CARGO_ARGS>`. [PR#116]
