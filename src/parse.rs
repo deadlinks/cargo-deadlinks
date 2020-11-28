@@ -1,28 +1,31 @@
 use std::collections::HashSet;
-use std::path::Path;
 
-use log::{debug, info};
+use log::debug;
 use lol_html::{element, RewriteStrSettings};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use url::Url;
 
-/// Parse the html file at the provided path and check the availablility of all links in it.
-pub fn parse_html_file(root_dir: &Path, path: &Path) -> HashSet<Url> {
-    info!("Checking doc page at {}", path.display());
-    let html = std::fs::read_to_string(path)
-        .unwrap_or_else(|e| panic!("{} did not contain valid UTF8: {}", path.display(), e));
+use crate::CheckError;
 
-    // root_url is a fixed path relative to the documentation directory. For `target/doc/crate_x/y`, it's `crate_x`.
-    let root_url = Url::from_directory_path(root_dir).unwrap();
-    // base_url is the file path relative to the documentation directory; it's different for each file.
-    // For `target/doc/crate_x/y`, it's `crate_x/y`.
-    // In general, `base_url.starts_with(root_url)` should always be true.
-    let base_url = Url::from_file_path(path).unwrap();
-
-    parse_a_hrefs(&html, root_url, base_url)
+/// Return all broken intra-doc links in the source (of the form ``[`x`]``),
+/// which presumably should have been resolved by rustdoc.
+pub fn broken_intra_doc_links(html: &str) -> Vec<CheckError> {
+    static BROKEN_INTRA_DOC_LINK: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r#"\[<code>(.*)</code>\]"#).unwrap());
+    BROKEN_INTRA_DOC_LINK
+        .captures_iter(&html)
+        .map(|captures| CheckError::IntraDocLink(captures.get(0).unwrap().as_str().to_owned()))
+        .collect()
 }
 
-/// This is a pure function, unlike `parse_html_file`, allowing it to be easily tested.
-fn parse_a_hrefs(html: &str, root_url: Url, base_url: Url) -> HashSet<Url> {
+/// Return all links in the HTML file, whether or not they are broken.
+///
+/// `root_url` is a fixed path relative to the documentation directory. For `target/doc/crate_x/y`, it's `crate_x`.
+/// `file_url` is the file path relative to the documentation directory; it's different for each file.
+/// For `target/doc/crate_x/y`, it's `crate_x/y`.
+/// In general, `file_url.starts_with(root_url)` should always be true.
+pub fn parse_a_hrefs(html: &str, root_url: &Url, file_url: &Url) -> HashSet<Url> {
     let mut urls = HashSet::new();
     lol_html::rewrite_str(
         html,
@@ -34,7 +37,7 @@ fn parse_a_hrefs(html: &str, root_url: Url, base_url: Url) -> HashSet<Url> {
                     // Treat absolute paths as absolute with respect to the `root_url`, not with respect to the file system.
                     (&root_url, absolute)
                 } else {
-                    (&base_url, href.as_str())
+                    (&file_url, href.as_str())
                 };
 
                 if let Ok(link) = base.join(&href) {
@@ -90,8 +93,8 @@ mod test {
 
         let urls = parse_a_hrefs(
             html,
-            Url::from_directory_path("/base").unwrap(),
-            Url::from_file_path("/base/test.html").unwrap(),
+            &Url::from_directory_path("/base").unwrap(),
+            &Url::from_file_path("/base/test.html").unwrap(),
         );
 
         assert!(urls.contains(&Url::from_file_path("/base/a.html").unwrap()));
@@ -112,8 +115,8 @@ mod test {
 
         let urls = parse_a_hrefs(
             html,
-            Url::from_directory_path("/root").unwrap(),
-            Url::from_file_path("/root/base/test.html").unwrap(),
+            &Url::from_directory_path("/root").unwrap(),
+            &Url::from_file_path("/root/base/test.html").unwrap(),
         );
 
         assert!(urls.contains(&Url::from_file_path("/root/base/a.html").unwrap()));

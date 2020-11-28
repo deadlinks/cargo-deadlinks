@@ -3,12 +3,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use log::info;
 use rayon::prelude::*;
 use rayon::ThreadPoolBuilder;
+use url::Url;
 use walkdir::{DirEntry, WalkDir};
 
 use check::is_available;
-use parse::parse_html_file;
 
 pub use check::{CheckError, IoError};
 
@@ -102,19 +103,26 @@ pub fn unavailable_urls<'a>(
     dir_path: &'a Path,
     ctx: &'a CheckContext,
 ) -> impl ParallelIterator<Item = FileError> + 'a {
+    let root_url = Url::from_directory_path(dir_path).unwrap();
+
     WalkDir::new(dir_path)
         .into_iter()
         .par_bridge()
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
         .flat_map(move |entry| {
-            let urls = parse_html_file(dir_path, entry.path());
+            let path = entry.path();
+            info!("Checking doc page at {}", path.display());
+            let html = std::fs::read_to_string(path)
+                .unwrap_or_else(|e| panic!("{} did not contain valid UTF8: {}", path.display(), e));
+
+            let file_url = Url::from_file_path(path).unwrap();
+            let urls = parse::parse_a_hrefs(&html, &root_url, &file_url);
+            let broken_intra_doc_links = parse::broken_intra_doc_links(&html);
             let errors = urls
                 .into_iter()
-                .filter_map(|url| match is_available(&url, &ctx) {
-                    Ok(()) => None,
-                    Err(err) => Some(err),
-                })
+                .filter_map(|url| is_available(&url, &ctx).err())
+                .chain(broken_intra_doc_links)
                 .collect::<Vec<_>>();
 
             if errors.is_empty() {
