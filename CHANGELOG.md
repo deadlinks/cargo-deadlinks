@@ -12,8 +12,19 @@
 #### Changed
 
 * `walk_dir` now takes `&CheckContext`, not `CheckContext`. [PR#118]
+* `Link::File` now stores a `PathBuf`, not a `String`. [PR#127]
+* `print_shortened` has been removed; using `Display` directly is recommended instead. [PR#127]
+  In particular, it's no longer possible to shorten files without going
+  through `unavailable_urls`. If you were using this API, please let me know
+  so I can help design an API that fits your use case; the previous one was a
+  maintenance burden.
+
+#### Fixed
+
+* Fragment errors are now shortened to use the directory being checked as the base, the same as normal 'file not found errors'. [PR#127]
 
 [PR#118]: https://github.com/deadlinks/cargo-deadlinks/pull/118
+[PR#127]: https://github.com/deadlinks/cargo-deadlinks/pull/127
 
 <a name="0.6.2"></a>
 ## 0.6.2 (2020-11-27)

@@ -17,6 +17,9 @@ fn reports_broken_links() {
         .stderr(contains("unresolved link"))
         .stdout(
             contains("Linked file at path fn.not_here.html does not exist")
-                .and(contains("Linked file at path links does not exist!")),
+                .and(contains("Linked file at path links does not exist!"))
+                .and(contains(
+                    "Fragment #fragments at index.html does not exist!",
+                )),
         );
 }
