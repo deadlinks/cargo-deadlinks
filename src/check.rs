@@ -42,14 +42,14 @@ impl fmt::Display for IoError {
 
 #[derive(Debug, Clone)]
 pub enum Link {
-    File(String),
+    File(PathBuf),
     Http(Url),
 }
 
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Link::File(path) => f.write_str(path),
+            Link::File(path) => write!(f, "{}", path.display()),
             Link::Http(url) => f.write_str(url.as_str()),
         }
     }
@@ -237,11 +237,7 @@ fn check_file_fragment(
         })
     };
 
-    is_fragment_available(
-        &Link::File(path.to_str().unwrap().to_string()),
-        fragment,
-        fetch_html,
-    )
+    is_fragment_available(&Link::File(path.to_path_buf()), fragment, fetch_html)
 }
 
 fn handle_response(url: &Url, resp: ureq::Response) -> Result<ureq::Response, CheckError> {
