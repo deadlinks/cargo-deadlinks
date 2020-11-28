@@ -11,9 +11,11 @@ pub fn parse_html_file(root_dir: &Path, path: &Path) -> HashSet<Url> {
     let html = std::fs::read_to_string(path)
         .unwrap_or_else(|e| panic!("{} did not contain valid UTF8: {}", path.display(), e));
 
-    // root_url is absolute *relative to* the documentation directory. For `target/dir/crate_x/y`, it's `crate_x`.
+    // root_url is a fixed path relative to the documentation directory. For `target/doc/crate_x/y`, it's `crate_x`.
     let root_url = Url::from_directory_path(root_dir).unwrap();
-    // base_url is the relative file path. For `target/dir/crate_x/y`, it's `crate_x/y`.
+    // base_url is the file path relative to the documentation directory; it's different for each file.
+    // For `target/doc/crate_x/y`, it's `crate_x/y`.
+    // In general, `base_url.starts_with(root_url)` should always be true.
     let base_url = Url::from_file_path(path).unwrap();
 
     parse_a_hrefs(&html, root_url, base_url)
