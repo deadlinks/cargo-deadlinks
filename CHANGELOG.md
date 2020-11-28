@@ -2,6 +2,13 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* `cargo deadlinks` now takes a `--cargo-dir` argument, allowing you to check projects other than the current directory.
+  This is most useful for developing deadlinks itself, but might be helpful for other use cases. [PR#119]
+
+[PR#119]: https://github.com/deadlinks/cargo-deadlinks/pull/119
+
 #### Changed
 
 * `walk_dir` now takes `&CheckContext`, not `CheckContext`. [PR#118]
