@@ -72,6 +72,8 @@ impl Link {
 
 #[derive(Debug)]
 pub enum CheckError {
+    /// An intra-doc link went unresolved by rustdoc and ended up in the final HTML
+    IntraDocLink(String),
     /// A relatively linked file did not exist
     File(PathBuf),
     /// A linked HTTP URL did not exist
@@ -85,6 +87,9 @@ pub enum CheckError {
 impl fmt::Display for CheckError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            CheckError::IntraDocLink(text) => {
+                write!(f, "Broken intra-doc link to {}!", text)
+            }
             CheckError::File(path) => {
                 write!(f, "Linked file at path {} does not exist!", path.display())
             }
