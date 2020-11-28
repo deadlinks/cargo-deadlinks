@@ -331,14 +331,7 @@ mod test {
     }
 
     fn test_check_file_url(path: &str) -> Result<(), CheckError> {
-        check_file_url(
-            &url_for(path),
-            &CheckContext {
-                verbose: false,
-                check_http: false,
-                check_fragments: true,
-            },
-        )
+        check_file_url(&url_for(path), &CheckContext::default())
     }
 
     #[test]
@@ -400,37 +393,21 @@ mod test {
     fn test_is_available_file_path() {
         is_available(
             &url_for("tests/html/index.html#i1"),
-            &CheckContext {
-                verbose: false,
-                check_http: false,
-                check_fragments: true,
-            },
+            &CheckContext::default(),
         )
         .unwrap();
     }
 
     #[test]
     fn test_is_available_directory_path() {
-        is_available(
-            &url_for("tests/html/#i1"),
-            &CheckContext {
-                verbose: false,
-                check_http: false,
-                check_fragments: true,
-            },
-        )
-        .unwrap();
+        is_available(&url_for("tests/html/#i1"), &CheckContext::default()).unwrap();
     }
 
     #[test]
     fn test_missing_dir_index_fragment() {
         match is_available(
             &url_for("tests/html/missing_index/#i1"),
-            &CheckContext {
-                verbose: false,
-                check_http: false,
-                check_fragments: true,
-            },
+            &CheckContext::default(),
         ) {
             Err(CheckError::File(path)) => assert!(path.ends_with("tests/html/missing_index")),
             x => panic!(
@@ -450,9 +427,8 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                verbose: false,
                 check_http: true,
-                check_fragments: true,
+                ..CheckContext::default()
             },
         )
         .unwrap();
@@ -479,9 +455,8 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                verbose: false,
                 check_http: true,
-                check_fragments: true,
+                ..CheckContext::default()
             },
         )
         .unwrap();
@@ -506,9 +481,8 @@ mod test {
         match is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                verbose: false,
                 check_http: true,
-                check_fragments: true,
+                ..CheckContext::default()
             },
         ) {
             Err(CheckError::Fragment(Link::Http(url), fragment, None)) => {
@@ -532,9 +506,8 @@ mod test {
         check_file_url(
             &url_for("tests/html/anchors.html#nonexistent"),
             &CheckContext {
-                verbose: false,
-                check_http: false,
                 check_fragments: false,
+                ..CheckContext::default()
             },
         )
         .unwrap();
@@ -552,9 +525,9 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                verbose: false,
                 check_http: true,
                 check_fragments: false,
+                ..CheckContext::default()
             },
         )
         .unwrap();

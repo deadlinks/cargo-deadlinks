@@ -6,12 +6,21 @@
 
 * `cargo deadlinks` now takes a `--cargo-dir` argument, allowing you to check projects other than the current directory.
   This is most useful for developing deadlinks itself, but might be helpful for other use cases. [PR#119]
+* `cargo deadlinks` now checks for broken [intra-doc links] based on heuristics.
+  This feature is still experimental and may have bugs; in particular, only
+  links with backticks (i.e. generated as `<code>`) are currently found.
+  You can opt out with `--no-intra-doc-links`.
+  `deadlinks` has not been changed. [PR#126]
 
+[intra-doc links]: https://doc.rust-lang.org/rustdoc/linking-to-items-by-name.html
+[PR#126]: https://github.com/deadlinks/cargo-deadlinks/pull/126
 [PR#119]: https://github.com/deadlinks/cargo-deadlinks/pull/119
 
 #### Changed
 
 * `walk_dir` now takes `&CheckContext`, not `CheckContext`. [PR#118]
+* `CheckError` now has a new `IntraDocLink` variant. [PR#126]
+* `parse_html_file` has been removed. Instead, use `parse_a_hrefs` or `broken_intra_doc_links` (or both). [PR#126]
 * `Link::File` now stores a `PathBuf`, not a `String`. [PR#127]
 * `print_shortened` has been removed; using `Display` directly is recommended instead. [PR#127]
   In particular, it's no longer possible to shorten files without going

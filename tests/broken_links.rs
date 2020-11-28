@@ -2,7 +2,7 @@ extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
 use predicates::prelude::PredicateBooleanExt;
-use predicates::str::contains;
+use predicates::str::{contains, is_match};
 use std::process::Command;
 
 #[test]
@@ -18,8 +18,25 @@ fn reports_broken_links() {
         .stdout(
             contains("Linked file at path fn.not_here.html does not exist")
                 .and(contains("Linked file at path links does not exist!"))
+                .and(contains("Broken intra-doc link to [<code>links</code>]!"))
                 .and(contains(
                     "Fragment #fragments at index.html does not exist!",
                 )),
+        );
+}
+
+#[test]
+fn allows_opting_out() {
+    Command::cargo_bin("cargo-deadlinks")
+        .unwrap()
+        .arg("deadlinks")
+        .arg("--ignore-intra-doc-links")
+        .current_dir("./tests/broken_links")
+        .assert()
+        .failure()
+        .stderr(contains("unresolved link"))
+        .stdout(
+            contains("Linked file at path fn.not_here.html does not exist")
+                .and(contains("Broken intra-doc links").not()),
         );
 }

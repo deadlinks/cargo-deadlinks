@@ -36,6 +36,7 @@ impl From<&MainArgs> for CheckContext {
             check_http: args.flag_check_http,
             verbose: args.flag_debug,
             check_fragments: !args.flag_ignore_fragments,
+            check_intra_doc_links: false,
         }
     }
 }
