@@ -41,7 +41,10 @@ pub struct FileError {
 
 impl fmt::Display for FileError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.print_shortened(None))?;
+        write!(f, "Found invalid urls in {}:", self.path.display())?;
+        for e in &self.errors {
+            write!(f, "\n\t{}", e)?;
+        }
         Ok(())
     }
 }
@@ -58,12 +61,11 @@ pub fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
 
     pool.install(|| {
         unavailable_urls(dir_path, ctx)
-            .map(|err| {
-                if ctx.verbose {
-                    println!("{}", err);
-                } else {
-                    println!("{}", err.print_shortened(Some(dir_path)));
+            .map(|mut err| {
+                if !ctx.verbose {
+                    err.shorten_all(dir_path);
                 }
+                println!("{}", err);
                 true
             })
             // ||||||
@@ -72,29 +74,20 @@ pub fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
 }
 
 impl FileError {
-    pub fn print_shortened(&self, prefix: Option<&Path>) -> String {
-        let prefix = prefix.unwrap_or_else(|| Path::new(""));
-        let filepath = self.path.strip_prefix(&prefix).unwrap_or(&self.path);
-        let mut ret = format!("Found invalid urls in {}:", filepath.display());
+    fn shorten_all(&mut self, prefix: &Path) {
+        use check::Link;
 
-        for e in &self.errors {
-            use std::fmt::Write;
-
-            ret.write_str("\n\t").unwrap();
-            match e {
-                CheckError::File(epath) => {
-                    let epath = epath.strip_prefix(prefix).unwrap_or(epath);
-                    write!(
-                        ret,
-                        "Linked file at path {} does not exist!",
-                        epath.display()
-                    )
-                    .unwrap();
+        if let Ok(shortened) = self.path.strip_prefix(&prefix) {
+            self.path = shortened.to_path_buf();
+        };
+        for mut e in &mut self.errors {
+            if let CheckError::File(epath) | CheckError::Fragment(Link::File(epath), _, _) = &mut e
+            {
+                if let Ok(shortened) = epath.strip_prefix(prefix) {
+                    *epath = shortened.to_path_buf();
                 }
-                _ => write!(ret, "{}", e).unwrap(),
             }
         }
-        ret
     }
 }
 
