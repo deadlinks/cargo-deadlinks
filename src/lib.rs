@@ -78,21 +78,20 @@ impl FileError {
         let mut ret = format!("Found invalid urls in {}:", filepath.display());
 
         for e in &self.errors {
-            use CheckError::*;
+            use std::fmt::Write;
 
+            ret.write_str("\n\t").unwrap();
             match e {
-                File(epath) => {
-                    let epath = epath.strip_prefix(&prefix).unwrap_or(&epath);
-                    ret.push_str("\n\tLinked file at path ");
-                    ret.push_str(&epath.display().to_string());
-                    ret.push_str(" does not exist!");
+                CheckError::File(epath) => {
+                    let epath = epath.strip_prefix(prefix).unwrap_or(epath);
+                    write!(
+                        ret,
+                        "Linked file at path {} does not exist!",
+                        epath.display()
+                    )
+                    .unwrap();
                 }
-                Http(_) => ret.push_str(&format!("\n\t{}", e)),
-                Fragment(_, _, _) => {
-                    ret.push_str("\n\t");
-                    ret.push_str(e.to_string().as_str());
-                }
-                Io(_) => ret.push_str(&format!("\n\t{}", e)),
+                _ => write!(ret, "{}", e).unwrap(),
             }
         }
         ret
