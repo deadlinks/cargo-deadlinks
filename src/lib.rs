@@ -22,6 +22,7 @@ pub struct CheckContext {
     pub check_http: bool,
     pub verbose: bool,
     pub check_fragments: bool,
+    pub check_intra_doc_links: bool,
 }
 
 impl Default for CheckContext {
@@ -30,6 +31,7 @@ impl Default for CheckContext {
             check_http: false,
             verbose: false,
             check_fragments: true,
+            check_intra_doc_links: false,
         }
     }
 }
@@ -118,7 +120,11 @@ pub fn unavailable_urls<'a>(
 
             let file_url = Url::from_file_path(path).unwrap();
             let urls = parse::parse_a_hrefs(&html, &root_url, &file_url);
-            let broken_intra_doc_links = parse::broken_intra_doc_links(&html);
+            let broken_intra_doc_links = if ctx.check_intra_doc_links {
+                parse::broken_intra_doc_links(&html)
+            } else {
+                Vec::new()
+            };
             let errors = urls
                 .into_iter()
                 .filter_map(|url| is_available(&url, &ctx).err())
