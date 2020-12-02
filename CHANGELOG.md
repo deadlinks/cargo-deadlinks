@@ -6,13 +6,14 @@
 
 * `cargo deadlinks` now takes a `--cargo-dir` argument, allowing you to check projects other than the current directory.
   This is most useful for developing deadlinks itself, but might be helpful for other use cases. [PR#119]
-* `cargo deadlinks` now checks for broken [intra-doc links] based on heuristics.
+* `cargo deadlinks` can now check for broken [intra-doc links] based on heuristics.
   This feature is still experimental and may have bugs; in particular, only
   links with backticks (i.e. generated as `<code>`) are currently found.
-  You can opt out with `--no-intra-doc-links`.
-  `deadlinks` has not been changed. [PR#126]
+  You can opt in with `--check-intra-doc-links`.
+  `deadlinks` has not been changed. [PR#126] [PR#128]
 
 [intra-doc links]: https://doc.rust-lang.org/rustdoc/linking-to-items-by-name.html
+[PR#128]: https://github.com/deadlinks/cargo-deadlinks/pull/128
 [PR#126]: https://github.com/deadlinks/cargo-deadlinks/pull/126
 [PR#119]: https://github.com/deadlinks/cargo-deadlinks/pull/119
 
