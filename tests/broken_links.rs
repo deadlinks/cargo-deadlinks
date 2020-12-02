@@ -2,7 +2,7 @@ extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
 use predicates::prelude::PredicateBooleanExt;
-use predicates::str::{contains, is_match};
+use predicates::str::contains;
 use std::process::Command;
 
 #[test]
@@ -10,6 +10,7 @@ fn reports_broken_links() {
     Command::cargo_bin("cargo-deadlinks")
         .unwrap()
         .arg("deadlinks")
+        .arg("--check-intra-doc-links")
         .current_dir("./tests/broken_links")
         .assert()
         .failure()
@@ -26,11 +27,10 @@ fn reports_broken_links() {
 }
 
 #[test]
-fn allows_opting_out() {
+fn does_not_check_intra_doc_by_default() {
     Command::cargo_bin("cargo-deadlinks")
         .unwrap()
         .arg("deadlinks")
-        .arg("--ignore-intra-doc-links")
         .current_dir("./tests/broken_links")
         .assert()
         .failure()
