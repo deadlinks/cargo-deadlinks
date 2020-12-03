@@ -1,3 +1,4 @@
+//! <https://tinyurl.com/rnxcavf>
 use std::{
     fmt,
     path::{Path, PathBuf},

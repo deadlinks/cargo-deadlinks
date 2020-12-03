@@ -32,9 +32,11 @@
 #### Fixed
 
 * Fragment errors are now shortened to use the directory being checked as the base, the same as normal 'file not found errors'. [PR#127]
+* 307 and 308 redirects are now followed. Previously, they would erroneously be reported as an error. [PR#129]
 
 [PR#118]: https://github.com/deadlinks/cargo-deadlinks/pull/118
 [PR#127]: https://github.com/deadlinks/cargo-deadlinks/pull/127
+[PR#129]: https://github.com/deadlinks/cargo-deadlinks/pull/129
 
 <a name="0.6.2"></a>
 ## 0.6.2 (2020-11-27)
