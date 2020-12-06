@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.7.0"></a>
+## 0.7.0 (2020-12-06)
+
 #### Added
 
 * `cargo deadlinks` now takes a `--cargo-dir` argument, allowing you to check projects other than the current directory.
