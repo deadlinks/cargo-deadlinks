@@ -4,7 +4,7 @@ use std::fmt;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-use log::debug;
+use log::{debug, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use url::Url;
@@ -14,7 +14,7 @@ use cached::SizedCache;
 
 use super::CheckContext;
 
-use crate::parse::parse_fragments;
+use crate::parse::{parse_fragments, parse_redirect};
 
 const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
@@ -233,15 +233,24 @@ fn check_file_fragment(
         fragment,
         expanded_path.display()
     );
-    let fetch_html = || {
+
+    fn get_html(expanded_path: &Path) -> Result<String, CheckError> {
         read_to_string(expanded_path).map_err(|err| {
             CheckError::Io(Box::new(IoError::FileIo(
                 expanded_path.to_string_lossy().to_string(),
                 err,
             )))
         })
-    };
+    }
 
+    let fetch_html = || {
+        let html = get_html(expanded_path)?;
+        if let Some(redirect) = parse_redirect(&html) {
+            get_html(&expanded_path.parent().unwrap().join(redirect))
+        } else {
+            Ok(html)
+        }
+    };
     is_fragment_available(&Link::File(path.to_path_buf()), fragment, fetch_html)
 }
 
@@ -297,9 +306,26 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 fn check_http_fragment(url: &Url, fragment: &str) -> Result<(), CheckError> {
     debug!("Checking fragment {} of URL {}.", fragment, url.as_str());
 
-    let fetch_html = || {
+    fn get_html(url: &Url) -> Result<String, CheckError> {
         let resp = ureq::get(url.as_str()).call();
         handle_response(&url, resp).map(|resp| resp.into_string().unwrap())
+    }
+
+    let fetch_html = || {
+        let html = get_html(url)?;
+        // NOTE: only handles one level of nesting. Maybe we should have multiple levels?
+        let redirect = parse_redirect(&html).and_then(|s| {
+            Url::parse(&s)
+                .map_err(|err| {
+                    warn!("failed to parse Rustdoc redirect: {}", err);
+                })
+                .ok()
+        });
+        if let Some(redirect) = redirect {
+            get_html(&redirect)
+        } else {
+            Ok(html)
+        }
     };
 
     is_fragment_available(&Link::Http(url.clone()), fragment, fetch_html)

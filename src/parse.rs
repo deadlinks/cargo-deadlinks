@@ -75,6 +75,27 @@ pub(crate) fn parse_fragments(html: &str) -> HashSet<String> {
     fragments
 }
 
+pub(crate) fn parse_redirect(html: &str) -> Option<String> {
+    let mut url = None;
+    lol_html::rewrite_str(
+        html,
+        RewriteStrSettings {
+            element_content_handlers: vec![element!(
+                r#"head > meta[http-equiv="refresh"]"#,
+                |el| {
+                    let content = el.get_attribute("content").unwrap();
+                    assert!(url.is_none(), "multiple `http-equiv` meta tags");
+                    url = content.split("URL=").nth(1).map(|s| s.to_owned());
+                    Ok(())
+                }
+            )],
+            ..RewriteStrSettings::default()
+        },
+    )
+    .expect("invalid HTML");
+    url
+}
+
 #[cfg(test)]
 mod test {
     use super::{parse_a_hrefs, parse_fragments};
