@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.7.1"></a>
+## 0.7.1 (2020-12-18)
+
 #### Fixed
 
 * HTML `<meta>` redirects are now followed.
