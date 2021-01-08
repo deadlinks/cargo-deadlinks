@@ -293,7 +293,11 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     // The URL might contain a fragment. In that case we need a full GET
     // request to check if the fragment exists.
     if url.fragment().is_none() || !ctx.check_fragments {
-        let resp = ureq::head(url.as_str()).call();
+        let mut resp = ureq::head(url.as_str()).call();
+        // If HEAD isn't allowed, try sending a GET instead
+        if resp.status() == 405 {
+            resp = ureq::get(url.as_str()).call();
+        }
 
         handle_response(url, resp).map(|_: ureq::Response| ())
     } else {

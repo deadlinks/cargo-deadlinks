@@ -2,6 +2,13 @@
 
 ## NEXT (UNRELEASED)
 
+#### Fixed
+
+* When a website gives 405 Method Not Supported for HEAD requests, fall back to GET. In particular,
+  this no longer marks all links to play.rust-lang.org as broken. [PR#136]
+
+[PR#136]: https://github.com/deadlinks/cargo-deadlinks/pull/136
+
 <a name="0.7.1"></a>
 ## 0.7.1 (2020-12-18)
 
