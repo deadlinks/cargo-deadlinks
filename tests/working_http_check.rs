@@ -1,6 +1,7 @@
 extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
+use predicates::prelude::PredicateBooleanExt;
 use predicates::str::contains;
 use std::process::Command;
 
@@ -44,6 +45,8 @@ mod working_http_check {
             .current_dir("./tests/working_http_check")
             .assert()
             .failure()
-            .stdout(contains("HTTP checking is forbidden"));
+            .stdout(
+                contains("HTTP checking is forbidden").and(contains("doc.rust-lang.org").not()),
+            );
     }
 }
