@@ -273,7 +273,7 @@ fn handle_response(url: &Url, resp: ureq::Response) -> Result<ureq::Response, Ch
 /// Check a URL with "http" or "https" scheme for availability. Returns `false` if it is unavailable.
 fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     if !ctx.check_http {
-        debug!(
+        warn!(
             "Skip checking {} as checking of http URLs is turned off",
             url
         );
@@ -282,7 +282,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 
     for blacklisted_prefix in PREFIX_BLACKLIST.iter() {
         if url.as_str().starts_with(blacklisted_prefix) {
-            debug!(
+            warn!(
                 "Skip checking {} as URL prefix is on the builtin blacklist",
                 url
             );

@@ -9,6 +9,13 @@
 
 [PR#136]: https://github.com/deadlinks/cargo-deadlinks/pull/136
 
+#### Changed
+
+* Give a warning when HTTP links are present but `--check-http` wasn't passed. Previously this was only a DEBUG message.
+  Note that this still requires opting-in to warnings with `RUST_LOG=warn`. [PR#137]
+
+[PR#137]: https://github.com/deadlinks/cargo-deadlinks/pull/137
+
 <a name="0.7.1"></a>
 ## 0.7.1 (2020-12-18)
 
