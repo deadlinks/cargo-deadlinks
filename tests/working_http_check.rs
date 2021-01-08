@@ -1,6 +1,7 @@
 extern crate assert_cmd;
 
 use assert_cmd::prelude::*;
+use predicates::str::contains;
 use std::process::Command;
 
 mod working_http_check {
@@ -33,5 +34,16 @@ mod working_http_check {
             .current_dir("./tests/working_http_check")
             .assert()
             .success();
+    }
+
+    #[test]
+    fn forbid_checking() {
+        Command::cargo_bin("cargo-deadlinks")
+            .unwrap()
+            .args(&["deadlinks", "--forbid-http"])
+            .current_dir("./tests/working_http_check")
+            .assert()
+            .failure()
+            .stdout(contains("HTTP checking is forbidden"));
     }
 }

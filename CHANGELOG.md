@@ -2,6 +2,18 @@
 
 ## NEXT (UNRELEASED)
 
+#### Added
+
+* `cargo deadlinks` and `deadlinks` now take a `--forbid-http` argument which gives an error if any HTTP links are present.
+  This can be useful for ensuring all documentation is viewable offline. [PR#138]
+
+#### Changed
+
+* `CheckError` now has an `HttpForbidden` variant. [PR#138]
+* The `check_http` field of `CheckContext` is now an enum instead of a boolean [PR#138]
+
+[PR#138]: https://github.com/deadlinks/cargo-deadlinks/pull/138
+
 <a name="0.7.2"></a>
 ## 0.7.2 (2020-01-09)
 

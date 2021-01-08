@@ -17,11 +17,22 @@ pub use check::{CheckError, IoError};
 mod check;
 mod parse;
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+/// What behavior should deadlinks use for HTTP links?
+pub enum HttpCheck {
+    /// Make an internet request to ensure the link works
+    Enabled,
+    /// Do nothing when encountering a link
+    Ignored,
+    /// Give an error when encountering a link
+    Forbidden,
+}
+
 // NOTE: this could be Copy, but we intentionally choose not to guarantee that.
 #[derive(Clone, Debug)]
 pub struct CheckContext {
-    pub check_http: bool,
     pub verbose: bool,
+    pub check_http: HttpCheck,
     pub check_fragments: bool,
     pub check_intra_doc_links: bool,
 }
@@ -29,7 +40,7 @@ pub struct CheckContext {
 impl Default for CheckContext {
     fn default() -> Self {
         CheckContext {
-            check_http: false,
+            check_http: HttpCheck::Ignored,
             verbose: false,
             check_fragments: true,
             check_intra_doc_links: false,

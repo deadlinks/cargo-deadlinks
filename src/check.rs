@@ -14,7 +14,10 @@ use cached::SizedCache;
 
 use super::CheckContext;
 
-use crate::parse::{parse_fragments, parse_redirect};
+use crate::{
+    parse::{parse_fragments, parse_redirect},
+    HttpCheck,
+};
 
 const PREFIX_BLACKLIST: [&str; 1] = ["https://doc.rust-lang.org"];
 
@@ -78,6 +81,8 @@ pub enum CheckError {
     File(PathBuf),
     /// A linked HTTP URL did not exist
     Http(Url),
+    /// An HTTP URL was encountered, but HTTP checking was forbidden
+    HttpForbidden(Url),
     /// The linked file existed, but was missing the linked HTML anchor
     Fragment(Link, String, Option<Vec<String>>),
     /// An error occured while trying to find whether the file or URL existed
@@ -94,6 +99,11 @@ impl fmt::Display for CheckError {
                 write!(f, "Linked file at path {} does not exist!", path.display())
             }
             CheckError::Http(url) => write!(f, "Linked URL {} does not exist!", url),
+            CheckError::HttpForbidden(url) => write!(
+                f,
+                "Found HTTP link {}, but HTTP checking is forbidden!",
+                url
+            ),
             CheckError::Fragment(link, fragment, missing_parts) => match missing_parts {
                 Some(missing_parts) => write!(
                     f,
@@ -285,12 +295,14 @@ fn handle_response(url: &Url, resp: ureq::Response) -> Result<ureq::Response, Ch
 
 /// Check a URL with "http" or "https" scheme for availability. Returns `false` if it is unavailable.
 fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
-    if !ctx.check_http {
+    if ctx.check_http == HttpCheck::Ignored {
         warn!(
             "Skip checking {} as checking of http URLs is turned off",
             url
         );
         return Ok(());
+    } else if ctx.check_http == HttpCheck::Forbidden {
+        return Err(CheckError::HttpForbidden(url.clone()));
     }
 
     for blacklisted_prefix in PREFIX_BLACKLIST.iter() {
@@ -350,6 +362,8 @@ fn check_http_fragment(url: &Url, fragment: &str) -> Result<(), CheckError> {
 
 #[cfg(test)]
 mod test {
+    use crate::HttpCheck;
+
     use super::{check_file_url, is_available, CheckContext, CheckError, Link};
     use mockito::{self, mock};
     use std::env;
@@ -470,7 +484,7 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                check_http: true,
+                check_http: HttpCheck::Enabled,
                 ..CheckContext::default()
             },
         )
@@ -498,7 +512,7 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                check_http: true,
+                check_http: HttpCheck::Enabled,
                 ..CheckContext::default()
             },
         )
@@ -524,7 +538,7 @@ mod test {
         match is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                check_http: true,
+                check_http: HttpCheck::Enabled,
                 ..CheckContext::default()
             },
         ) {
@@ -568,7 +582,7 @@ mod test {
         is_available(
             &Url::parse(&url).unwrap(),
             &CheckContext {
-                check_http: true,
+                check_http: HttpCheck::Enabled,
                 check_fragments: false,
                 ..CheckContext::default()
             },
