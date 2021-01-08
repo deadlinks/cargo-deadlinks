@@ -301,8 +301,6 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
             url
         );
         return Ok(());
-    } else if ctx.check_http == HttpCheck::Forbidden {
-        return Err(CheckError::HttpForbidden(url.clone()));
     }
 
     for blacklisted_prefix in PREFIX_BLACKLIST.iter() {
@@ -313,6 +311,10 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
             );
             return Ok(());
         }
+    }
+
+    if ctx.check_http == HttpCheck::Forbidden {
+        return Err(CheckError::HttpForbidden(url.clone()));
     }
 
     // The URL might contain a fragment. In that case we need a full GET

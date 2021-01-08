@@ -24,7 +24,10 @@ pub enum HttpCheck {
     Enabled,
     /// Do nothing when encountering a link
     Ignored,
-    /// Give an error when encountering a link
+    /// Give an error when encountering a link.
+    ///
+    /// Note that even when HTTP links are forbidden, `doc.rust-lang.org` links are still assumed to
+    /// be valid.
     Forbidden,
 }
 
