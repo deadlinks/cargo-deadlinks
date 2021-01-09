@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.7.2"></a>
+## 0.7.2 (2020-01-09)
+
 #### Fixed
 
 * When a website gives 405 Method Not Supported for HEAD requests, fall back to GET. In particular,
