@@ -130,7 +130,7 @@ jobs:
           args: --file
 
   msrv:
-    name: Check minimum supported rust version
+    name: Check MSRV
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
