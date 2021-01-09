@@ -102,6 +102,7 @@ dependencies = [
  "mockito",
  "num_cpus",
  "once_cell",
+ "percent-encoding",
  "pico-args",
  "predicates",
  "rayon",

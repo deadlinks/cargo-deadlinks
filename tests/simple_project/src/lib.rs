@@ -1,3 +1,7 @@
+//! [Non-ascii link](#†)
+//!
+//! <div id="†">Some text</div>
+
 /// Foo function
 ///
 /// Has something to do with [bar](./fn.bar.html).
