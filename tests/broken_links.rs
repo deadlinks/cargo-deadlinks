@@ -22,7 +22,8 @@ fn reports_broken_links() {
                 .and(contains("Broken intra-doc link to [<code>links</code>]!"))
                 .and(contains(
                     "Fragment #fragments at index.html does not exist!",
-                )),
+                ))
+                .and(contains("Fragment #%FF at index.html does not exist!")),
         );
 }
 

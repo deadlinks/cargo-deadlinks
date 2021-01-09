@@ -156,6 +156,19 @@ fn is_fragment_available(
         return Ok(());
     }
 
+    // Try again with percent-decoding.
+    // NOTE: This isn't done unconditionally because it's possible the fragment it's linking to was also percent-encoded.
+    match percent_encoding::percent_decode(fragment.as_bytes()).decode_utf8() {
+        Ok(cow) => {
+            if fragments.contains(&*cow) {
+                return Ok(());
+            }
+        }
+        // If this was invalid UTF8 after percent-decoding, it can't be in the file (since we have a `String`, not opaque bytes).
+        // Assume it wasn't meant to be url-encoded.
+        Err(err) => warn!("{} url-decoded to invalid UTF8: {}", fragment, err),
+    }
+
     // Rust documentation uses `#n-m` fragments and JavaScript to highlight
     // a range of lines in HTML of source code, an element with `id`
     // attribute of (literal) "#n-m" will not exist, but elements with

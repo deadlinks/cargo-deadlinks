@@ -37,6 +37,8 @@ ureq = { version = "1.5.4", features = ["tls"], default-features = false }
 serde = "1.0"
 serde_derive = "1.0"
 url = "2"
+# Try to keep this in sync with `url`'s version
+percent-encoding = "2"
 walkdir = "2.1"
 
 [dev-dependencies]
