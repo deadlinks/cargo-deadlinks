@@ -2,6 +2,9 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.8.0"></a>
+## 0.8.0 (2020-01-17)
+
 #### Added
 
 * `cargo deadlinks` and `deadlinks` now take a `--forbid-http` argument which gives an error if any HTTP links are present.
