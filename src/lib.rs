@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::info;
+use log::{debug, info};
 use rayon::prelude::*;
 use rayon::ThreadPoolBuilder;
 use url::Url;
@@ -20,9 +20,9 @@ mod parse;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 /// What behavior should deadlinks use for HTTP links?
 pub enum HttpCheck {
-    /// Make an internet request to ensure the link works
+    /// Make an internet request to ensure the link works.
     Enabled,
-    /// Do nothing when encountering a link
+    /// Do nothing when encountering a link.
     Ignored,
     /// Give an error when encountering a link.
     ///
@@ -32,12 +32,33 @@ pub enum HttpCheck {
 }
 
 // NOTE: this could be Copy, but we intentionally choose not to guarantee that.
+/// Link-checking options.
 #[derive(Clone, Debug)]
 pub struct CheckContext {
+    /// Should deadlinks give more detail when checking links?
+    ///
+    /// Currently, 'more detail' just means not to abbreviate file paths when printing errors.
     pub verbose: bool,
+    /// What behavior should deadlinks use for HTTP links?
     pub check_http: HttpCheck,
+    /// Should fragments in URLs be checked?
     pub check_fragments: bool,
     pub check_intra_doc_links: bool,
+    /// A list of files with ignored link fragments.
+    pub ignored_links: Vec<IgnoredFile>,
+    /// A list of files with ignored intra-doc links.
+    pub ignored_intra_doc_links: Vec<IgnoredFile>,
+}
+
+/// A file to ignore.
+#[derive(Clone, Debug)]
+pub struct IgnoredFile {
+    /// What file path should be ignored?
+    pub path: PathBuf,
+    /// What links in the file should be ignored?
+    ///
+    /// An empty list means all links should be ignored.
+    pub links: Vec<String>,
 }
 
 impl Default for CheckContext {
@@ -47,6 +68,8 @@ impl Default for CheckContext {
             verbose: false,
             check_fragments: true,
             check_intra_doc_links: false,
+            ignored_links: Vec::new(),
+            ignored_intra_doc_links: Vec::new(),
         }
     }
 }
@@ -72,6 +95,9 @@ impl fmt::Display for FileError {
 /// For each error that occurred, print an error message.
 /// Returns whether an error occurred.
 pub fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
+    debug!("ignored_links: {:?}", ctx.ignored_links);
+    debug!("ignored_intra_doc_links: {:?}", ctx.ignored_intra_doc_links);
+
     let pool = ThreadPoolBuilder::new()
         .num_threads(num_cpus::get())
         .build()
@@ -79,12 +105,58 @@ pub fn walk_dir(dir_path: &Path, ctx: &CheckContext) -> bool {
 
     pool.install(|| {
         unavailable_urls(dir_path, ctx)
-            .map(|mut err| {
-                if !ctx.verbose {
-                    err.shorten_all(dir_path);
+            .filter_map(|mut file_err| {
+                let shortened_path = file_err.path.strip_prefix(dir_path).unwrap_or(dir_path);
+                debug!("file_err={:?}, shortened_path={:?}", file_err, shortened_path);
+
+                // First, filter out ignored errors
+                if let Some(ignore) = ctx.ignored_links.iter().find(|ignore| ignore.path == shortened_path) {
+                    file_err.errors.retain(|err| {
+                        let should_ignore = if ignore.links.is_empty() {
+                            // Ignore all links
+                            matches!(err, CheckError::Http(_) | CheckError::File(_) | CheckError::Fragment(..))
+                        } else {
+                            // Ignore links that are present in the list
+                            match err {
+                                CheckError::Fragment(_, fragment, _) => ignore.links.iter().any(|link| {
+                                    #[allow(clippy::or_fun_call)]
+                                    let link = link.strip_prefix('#').unwrap_or(link.as_str());
+                                    link == fragment
+                                }),
+                                CheckError::File(path) => ignore.links.iter().any(|link| Path::new(link) == path),
+                                CheckError::Http(url) => ignore.links.iter().any(|link| link == url.as_str()),
+                                CheckError::IntraDocLink(_) | CheckError::HttpForbidden(_) | CheckError::Io(_) => false,
+                            }
+                        };
+                        !should_ignore
+                    });
                 }
-                println!("{}", err);
-                true
+                if let Some(ignore) = ctx.ignored_intra_doc_links.iter().find(|ignore| ignore.path == shortened_path) {
+                    file_err.errors.retain(|err| {
+                        let should_ignore = if ignore.links.is_empty() {
+                            // Ignore all links
+                            matches!(err, CheckError::IntraDocLink(_))
+                        } else {
+                            // Ignore links that are present in the list
+                            match err {
+                                CheckError::IntraDocLink(link) => ignore.links.contains(link),
+                                _ => false,
+                            }
+                        };
+                        !should_ignore
+                    });
+                }
+
+                if file_err.errors.is_empty() {
+                    return None;
+                }
+
+                // Next, print the error for display
+                if !ctx.verbose {
+                    file_err.shorten_all(dir_path);
+                }
+                println!("{}", file_err);
+                Some(true)
             })
             // ||||||
             .reduce(|| false, |initial, new| initial || new)

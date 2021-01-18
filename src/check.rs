@@ -84,6 +84,8 @@ pub enum CheckError {
     /// An HTTP URL was encountered, but HTTP checking was forbidden
     HttpForbidden(Url),
     /// The linked file existed, but was missing the linked HTML anchor
+    ///
+    /// (`link, fragment, missing range)
     Fragment(Link, String, Option<Vec<String>>),
     /// An error occured while trying to find whether the file or URL existed
     Io(Box<IoError>),

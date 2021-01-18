@@ -17,6 +17,7 @@ Options:
     --check-http            Check 'http' and 'https' scheme links
     --forbid-http           Give an error if HTTP links are found. This is incompatible with --check-http.
     --ignore-fragments      Don't check URL fragments.
+    --ignore-file           Path to a file with ignores. Defaults to `deadlinks.toml`.
     --debug                 Use debug output
     -v --verbose            Use verbose output
     -V --version            Print version info and exit.
@@ -25,6 +26,7 @@ Options:
 #[derive(Debug, Deserialize)]
 struct MainArgs {
     arg_directory: Vec<PathBuf>,
+    arg_ignore_file: Option<PathBuf>,
     flag_verbose: bool,
     flag_debug: bool,
     flag_check_http: bool,
@@ -41,11 +43,21 @@ impl From<&MainArgs> for CheckContext {
         } else {
             HttpCheck::Ignored
         };
+        let (ignored_links, ignored_intra_doc_links) =
+            match shared::parse_ignore_file(args.arg_ignore_file.clone()) {
+                Ok(x) => x,
+                Err(err) => {
+                    eprintln!("error: {}", err);
+                    std::process::exit(1);
+                }
+            };
         CheckContext {
             check_http,
             verbose: args.flag_debug,
             check_fragments: !args.flag_ignore_fragments,
             check_intra_doc_links: false,
+            ignored_links,
+            ignored_intra_doc_links,
         }
     }
 }
@@ -65,6 +77,11 @@ fn parse_args() -> Result<MainArgs, shared::PicoError> {
         flag_ignore_fragments: args.contains("--ignore-fragments"),
         flag_check_http: args.contains("--check-http"),
         flag_forbid_http: args.contains("--forbid-http"),
+        arg_ignore_file: args
+            .opt_value_from_os_str("--ignore-file", |os_str| {
+                Result::<_, std::convert::Infallible>::Ok(PathBuf::from(os_str))
+            })
+            .unwrap(),
         arg_directory: args.free_os()?.into_iter().map(Into::into).collect(),
     };
     if args.flag_forbid_http && args.flag_check_http {
