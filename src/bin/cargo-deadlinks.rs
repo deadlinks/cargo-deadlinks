@@ -37,6 +37,7 @@ CARGO_ARGS will be passed verbatim to `cargo doc` (as long as `--no-build` is no
 struct MainArgs {
     arg_directory: Option<String>,
     arg_cargo_directory: Option<OsString>,
+    arg_ignore_file: Option<PathBuf>,
     flag_verbose: bool,
     flag_debug: bool,
     flag_check_http: bool,
@@ -56,11 +57,21 @@ impl From<&MainArgs> for CheckContext {
         } else {
             HttpCheck::Ignored
         };
+        let (ignored_links, ignored_intra_doc_links) =
+            match shared::parse_ignore_file(args.arg_ignore_file.clone()) {
+                Ok(x) => x,
+                Err(err) => {
+                    eprintln!("error: {}", err);
+                    std::process::exit(1);
+                }
+            };
         CheckContext {
             check_http,
             verbose: args.flag_debug,
             check_fragments: !args.flag_ignore_fragments,
             check_intra_doc_links: args.flag_check_intra_doc_links,
+            ignored_links,
+            ignored_intra_doc_links,
         }
     }
 }
@@ -96,6 +107,11 @@ fn parse_args() -> Result<MainArgs, shared::PicoError> {
     }
     let main_args = MainArgs {
         arg_directory: args.opt_value_from_str("--dir")?,
+        arg_ignore_file: args
+            .opt_value_from_os_str("--ignore-file", |os_str| {
+                Result::<_, std::convert::Infallible>::Ok(PathBuf::from(os_str))
+            })
+            .unwrap(),
         arg_cargo_directory: args
             .opt_value_from_os_str("--cargo-dir", |s| Result::<_, Error>::Ok(s.to_owned()))?,
         flag_verbose: args.contains(["-v", "--verbose"]),
