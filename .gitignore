@@ -1,3 +1,4 @@
+tests/working_http_check/target2/
 tests/simple_project/target2/
 target
 Cargo.lock

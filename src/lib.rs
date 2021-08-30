@@ -126,7 +126,7 @@ pub fn unavailable_urls<'a>(
         .into_iter()
         .par_bridge()
         .filter_map(Result::ok)
-        .filter(|entry| entry.file_type().is_file() && is_html_file(&entry))
+        .filter(|entry| entry.file_type().is_file() && is_html_file(entry))
         .flat_map(move |entry| {
             let path = entry.path();
             info!("Checking doc page at {}", path.display());
@@ -142,7 +142,7 @@ pub fn unavailable_urls<'a>(
             };
             let errors = urls
                 .into_iter()
-                .filter_map(|url| is_available(&url, &ctx).err())
+                .filter_map(|url| is_available(&url, ctx).err())
                 .chain(broken_intra_doc_links)
                 .collect::<Vec<_>>();
 
