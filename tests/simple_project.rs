@@ -111,13 +111,9 @@ mod simple_project {
             .assert()
             .failure()
             .stdout(
-                contains(
-                    "cargo-deadlinks/tests/simple_project/ta\
-                  rget/doc/simple_project/fn.foo.html:",
-                )
-                .and(contains(
-                    "cargo-deadlinks/tests/simple_proj\
-                    ect/target/doc/simple_project/fn.bar.html does not exist!",
+                contains("tests/simple_project/target/doc/simple_project/fn.foo.html:")
+                    .and(contains(
+                    "tests/simple_project/target/doc/simple_project/fn.bar.html does not exist!",
                 )),
             );
     }
