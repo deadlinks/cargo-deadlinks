@@ -141,6 +141,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          toolchain: stable
           command: install
           args: cargo-sweep
 

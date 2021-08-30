@@ -14,7 +14,7 @@ pub fn broken_intra_doc_links(html: &str) -> Vec<CheckError> {
     static BROKEN_INTRA_DOC_LINK: Lazy<Regex> =
         Lazy::new(|| Regex::new(r#"\[<code>(.*)</code>\]"#).unwrap());
     BROKEN_INTRA_DOC_LINK
-        .captures_iter(&html)
+        .captures_iter(html)
         .map(|captures| CheckError::IntraDocLink(captures.get(0).unwrap().as_str().to_owned()))
         .collect()
 }
@@ -40,7 +40,7 @@ pub fn parse_a_hrefs(html: &str, root_url: &Url, file_url: &Url) -> HashSet<Url>
                     (&file_url, href.as_str())
                 };
 
-                if let Ok(link) = base.join(&href) {
+                if let Ok(link) = base.join(href) {
                     debug!("link is {:?}", link);
                     urls.insert(link);
                 } else {
