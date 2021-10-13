@@ -2,6 +2,20 @@
 
 ## NEXT (UNRELEASED)
 
+<a name="0.8.1"></a>
+## 0.8.1 (2021-10-12)
+
+#### Changed
+
+* Updated many dependencies. Deadlinks no longer has any dependencies that fail `cargo audit`. [PR#153]
+
+#### Fixed
+
+* Tests now pass even if the project directory is not named "cargo-deadlinks". [PR#149]
+
+[PR#153]: https://github.com/deadlinks/cargo-deadlinks/pull/153
+[PR#149]: https://github.com/deadlinks/cargo-deadlinks/pull/149
+
 <a name="0.8.0"></a>
 ## 0.8.0 (2020-01-17)
 
