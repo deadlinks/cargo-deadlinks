@@ -1,7 +1,6 @@
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::io::BufReader;
-use std::path::PathBuf;
 use std::process::{self, Command};
 
 use cargo_metadata::{Message, MetadataCommand};
@@ -181,7 +180,7 @@ fn determine_dir(
     no_build: bool,
     cargo_args: &[OsString],
     cargo_dir: Option<&OsStr>,
-) -> Vec<PathBuf> {
+) -> Vec<cargo_metadata::camino::Utf8PathBuf> {
     if no_build {
         eprintln!("warning: --no-build ignores `doc = false` and may have other bugs");
         let manifest = MetadataCommand::new()
@@ -239,7 +238,7 @@ fn determine_dir(
             _ => None,
         })
         .flatten()
-        .filter(|path| path.file_name().and_then(|f| f.to_str()) == Some("index.html"))
+        .filter(|path| path.file_name() == Some("index.html"))
         .map(|mut path| {
             path.pop();
             path
