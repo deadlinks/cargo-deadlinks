@@ -78,12 +78,10 @@ mod simple_project {
         remove_all("./tests/simple_project/target2");
         assert_doc("./tests/simple_project", &[("CARGO_TARGET_DIR", "target2")]).success();
 
+        let target: &str = option_env!("TARGET").unwrap_or("x86_64-unknown-linux-gnu");
+
         remove_all("./tests/simple_project/target");
-        assert_doc(
-            "./tests/simple_project",
-            &[("CARGO_BUILD_TARGET", "x86_64-unknown-linux-gnu")],
-        )
-        .success();
+        assert_doc("./tests/simple_project", &[("CARGO_BUILD_TARGET", target)]).success();
 
         // fn it_shortens_path_on_error
         remove_all("./tests/simple_project/target");
