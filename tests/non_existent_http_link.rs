@@ -38,7 +38,7 @@ mod non_existent_http_link {
         // fails with --check-http flag
         Command::cargo_bin("cargo-deadlinks")
             .unwrap()
-            .args(&["deadlinks", "--check-http"])
+            .args(["deadlinks", "--check-http"])
             .current_dir("./tests/non_existent_http_link")
             .assert()
             .failure()

@@ -9,7 +9,7 @@ mod working_http_check {
     use super::*;
 
     fn remove_target(relative_path: &'static str) {
-        match std::fs::remove_dir_all(&format!("./tests/working_http_check/{}", relative_path)) {
+        match std::fs::remove_dir_all(format!("./tests/working_http_check/{}", relative_path)) {
             Ok(_) => {}
             Err(err) => match err.kind() {
                 std::io::ErrorKind::NotFound => {}
@@ -34,7 +34,7 @@ mod working_http_check {
         // succeeds with --check-http flag
         Command::cargo_bin("cargo-deadlinks")
             .unwrap()
-            .args(&["deadlinks", "--check-http"])
+            .args(["deadlinks", "--check-http"])
             .current_dir("./tests/working_http_check")
             .assert()
             .success();
@@ -45,7 +45,7 @@ mod working_http_check {
         remove_target("target2");
         Command::cargo_bin("cargo-deadlinks")
             .unwrap()
-            .args(&[
+            .args([
                 "deadlinks",
                 "--forbid-http",
                 "--",
