@@ -199,8 +199,7 @@ fn determine_dir(
             .packages
             .into_iter()
             .filter(|package| package.source.is_none())
-            .map(|package| package.targets)
-            .flatten()
+            .flat_map(|package| package.targets)
             .filter(has_docs)
             .map(move |target| doc.join(target.name.replace('-', "_")));
         return iter.collect();
@@ -214,6 +213,7 @@ fn determine_dir(
     });
     // Stolen from https://docs.rs/cargo_metadata/0.12.0/cargo_metadata/#examples
     let mut cargo_process = Command::new(cargo);
+    #[allow(clippy::needless_borrow)] // MSRV is 1.46
     cargo_process
         .args(&[
             "doc",

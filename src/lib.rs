@@ -1,4 +1,5 @@
-//! <https://tinyurl.com/rnxcavf>
+#![allow(clippy::result_large_err)]
+
 use std::{
     fmt,
     path::{Path, PathBuf},
@@ -95,7 +96,7 @@ impl FileError {
     fn shorten_all(&mut self, prefix: &Path) {
         use check::Link;
 
-        if let Ok(shortened) = self.path.strip_prefix(&prefix) {
+        if let Ok(shortened) = self.path.strip_prefix(prefix) {
             self.path = shortened.to_path_buf();
         };
         for mut e in &mut self.errors {
