@@ -8,9 +8,11 @@ pub fn init_logger(debug: bool, verbose: bool, krate: &str) {
     match (debug, verbose) {
         (true, _) => {
             builder.filter(Some(krate), LevelFilter::Debug);
+            builder.filter(Some("cargo_deadlinks"), LevelFilter::Debug);
         }
         (false, true) => {
             builder.filter(Some(krate), LevelFilter::Info);
+            builder.filter(Some("cargo_deadlinks"), LevelFilter::Info);
         }
         _ => {}
     }

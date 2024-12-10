@@ -4,7 +4,7 @@ use std::fmt;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-use log::{debug, warn};
+use log::{debug, info, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use url::Url;
@@ -314,6 +314,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
     // The URL might contain a fragment. In that case we need a full GET
     // request to check if the fragment exists.
     if url.fragment().is_none() || !ctx.check_fragments {
+        info!("Check URL {url}");
         match ureq::head(url.as_str()).call() {
             Err(ureq::Error::Status(405, _)) => {
                 // If HEAD isn't allowed, try sending a GET instead
@@ -331,7 +332,7 @@ fn check_http_url(url: &Url, ctx: &CheckContext) -> Result<(), CheckError> {
 }
 
 fn check_http_fragment(url: &Url, fragment: &str) -> Result<(), CheckError> {
-    debug!("Checking fragment {} of URL {}.", fragment, url.as_str());
+    info!("Checking fragment {} of URL {}.", fragment, url.as_str());
 
     fn get_html(url: &Url) -> Result<String, CheckError> {
         let resp = ureq::get(url.as_str()).call()?;
